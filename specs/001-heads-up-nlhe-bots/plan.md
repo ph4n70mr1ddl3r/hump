@@ -23,7 +23,11 @@ Implement a server hosting a single heads-up No Limit Texas Hold'em table for tw
 **Testing**: Google Test (gtest)  
 **Target Platform**: Linux server
 **Project Type**: single (server)  
-**Performance Goals**: Handle up to 2 concurrent connections with sub-second response times; typical poker hand latency < 1 second per action.  
+**Performance Goals**: 
+  - 95th‑percentile hand‑action latency ≤ 1 s (including bot delay).
+  - Server startup time ≤ 2 s.
+  - Max reconnect delay (ample‑time) ≤ 30 s (configurable).
+  - Total chip count conserved across 1000 hands (zero leak).  
 **Constraints**: Must handle client disconnections with configurable timeouts; bets must be integers; no persistence required.  
 **Scale/Scope**: Single table, 2 players, no scaling required.
 
@@ -48,8 +52,8 @@ Implement a server hosting a single heads-up No Limit Texas Hold'em table for tw
 
 ### IV. Performance Requirements
 - **Requirement**: Performance budgets MUST be defined and monitored for all user-facing operations.
-- **Compliance**: Performance goals defined (sub‑second response times, typical hand latency < 1s). Budgets to be refined during implementation.
-- **Status**: ⚠️ PARTIAL (budgets need refinement)
+- **Compliance**: Performance budgets defined (95th‑percentile latency ≤ 1 s, startup ≤ 2 s, reconnect delay ≤ 30 s, chip‑conservation).
+- **Status**: ✅ PASS
 
 ### Development Workflow
 - **Requirement**: All features MUST follow specification → plan → tasks workflow.

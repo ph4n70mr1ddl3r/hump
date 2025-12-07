@@ -45,7 +45,7 @@ As an operator, I want bots to play with a random strategy, include human-like d
 
 1. **Given** a bot with stack below 5BB, **When** the hand ends, **Then** the bot's stack is automatically topped up to 100BB.
 2. **Given** a bot's turn to act, **When** the bot makes a decision, **Then** there is a random delay (0.5-3 seconds) before the action is sent.
-3. **Given** multiple betting options, **When** the bot acts, **Then** it chooses randomly between valid actions (fold, call, raise) with reasonable raise sizes.
+3. **Given** multiple betting options, **When** the bot acts, **Then** it chooses randomly between valid actions (fold, call, raise) with raise amounts between the minimum raise and the player's stack (per FR‑007).
 
 ---
 
@@ -82,8 +82,8 @@ As an operator, I want the server to handle client disconnections gracefully by 
 - **FR-001**: Server MUST host exactly one table for exactly two players (heads-up).
 - **FR-002**: Server MUST implement standard No Limit Texas Hold'em rules (blinds, four betting rounds, hand ranking, pot distribution).
 - **FR-003**: Server MUST enforce integer bets with minimum bet equal to big blind (4) and maximum bet up to a player's stack.
-- **FR-004**: Server MUST handle client disconnections by waiting for a configurable "ample time" (default: 30 seconds) before marking the player folded and sitting them out.
-- **FR-005**: Server MUST remove inactive clients after a configurable "removal timeout" (default: 1 minute) if they do not reconnect.
+- **FR-004**: Server MUST handle client disconnections by waiting for a configurable "ample time" (default: 30 seconds) before marking the player folded and sitting them out. This timeout is provided via command‑line arguments (see FR‑011).
+- **FR-005**: Server MUST remove inactive clients after a configurable "removal timeout" (default: 1 minute) if they do not reconnect. This timeout is provided via command‑line arguments (see FR‑011).
 - **FR-006**: Client MUST connect to server and start with 100BB stack (400 chips at 2/4 blinds).
 - **FR-007**: Client MUST play with a random strategy, choosing randomly between valid actions (fold, call, raise) with raise amounts between minimum raise and player's stack.
 - **FR-008**: Client MUST automatically top up stack to 100BB when stack falls below 5BB (between hands, not during a hand).
@@ -115,7 +115,7 @@ As an operator, I want the server to handle client disconnections gracefully by 
 
 - **SC-001**: Two bots can play at least 100 consecutive hands without manual intervention (excluding disconnections).
 - **SC-002**: Server maintains game state correctly across hand transitions with no chip leaks or state corruption (total chips in play remains constant).
-- **SC-003**: Disconnected clients are given configurable wait time (default 30 seconds) before being marked folded and sat out.
+- **SC-003**: Disconnected clients are given configurable ample time (default 30 seconds) before being marked folded and sat out.
 - **SC-004**: Inactive clients are removed after configurable timeout (default 1 minute) if they do not reconnect, freeing up their seat.
 - **SC-005**: Bots exhibit random decision-making with realistic delays (0.5-3 seconds per action) across 95% of actions.
 - **SC-006**: Stack top-up automatically occurs when a bot's stack falls below 5BB, restoring it to 100BB between hands.

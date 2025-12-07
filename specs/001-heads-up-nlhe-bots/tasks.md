@@ -93,7 +93,7 @@
 
 ### Implementation for User Story 2
 
-- [ ] T032 [P] [US2] Implement random strategy (fold/call/raise with reasonable raise sizes) in src/client/random_strategy.cpp and src/client/random_strategy.hpp
+- [ ] T032 [P] [US2] Implement random strategy (fold/call/raise with raise amounts between minimum raise and player's stack) in src/client/random_strategy.cpp and src/client/random_strategy.hpp
 - [ ] T033 [P] [US2] Implement delay mechanism (0.5-3 seconds) in src/client/delay.cpp and src/client/delay.hpp
 - [ ] T034 [US2] Implement stack top-up detection and execution (between hands) in src/client/stack_management.cpp and src/client/stack_management.hpp
 - [ ] T035 [US2] Integrate random strategy and delays into bot main loop in src/client/bot.cpp
