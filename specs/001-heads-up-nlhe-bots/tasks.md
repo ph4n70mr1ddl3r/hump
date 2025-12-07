@@ -16,9 +16,9 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create project structure per implementation plan (src/core/, src/server/, src/client/, src/common/, tests/unit/, tests/integration/, tests/contract/, cmake/, scripts/)
-- [ ] T002 Initialize CMake project with dependencies (Boost.Beast, nlohmann/json, Google Test) in CMakeLists.txt
-- [ ] T003 [P] Configure clang-format and clang-tidy in .clang-format and .clang-tidy
+- [X] T001 Create project structure per implementation plan (src/core/, src/server/, src/client/, src/common/, tests/unit/, tests/integration/, tests/contract/, cmake/, scripts/)
+- [X] T002 Initialize CMake project with dependencies (Boost.Beast, nlohmann/json, Google Test) in CMakeLists.txt
+- [X] T003 [P] Configure clang-format and clang-tidy in .clang-format and .clang-tidy
 
 ---
 
@@ -30,22 +30,22 @@
 
 ### Tests for Foundational Components (TDD)
 
-- [ ] T004 [P] Write unit tests for card representation and deck shuffling in tests/unit/core/deck_test.cpp
-- [ ] T005 [P] Write unit tests for hand ranking logic in tests/unit/core/hand_ranking_test.cpp
-- [ ] T006 [P] Write unit tests for betting rules in tests/unit/core/betting_rules_test.cpp
-- [ ] T007 [P] Write unit tests for JSON serialization in tests/unit/common/json_serialization_test.cpp
-- [ ] T008 [P] Write integration test for WebSocket connection in tests/integration/websocket_connection_test.cpp
-- [ ] T008b [P] Contract test for malformed messages and invalid inputs in tests/contract/malformed_messages_test.cpp
+- [X] T004 [P] Write unit tests for card representation and deck shuffling in tests/unit/core/deck_test.cpp
+- [X] T005 [P] Write unit tests for hand ranking logic in tests/unit/core/hand_ranking_test.cpp
+- [X] T006 [P] Write unit tests for betting rules in tests/unit/core/betting_rules_test.cpp
+- [X] T007 [P] Write unit tests for JSON serialization in tests/unit/common/json_serialization_test.cpp
+- [X] T008 [P] Write integration test for WebSocket connection in tests/integration/websocket_connection_test.cpp
+- [X] T008b [P] Contract test for malformed messages and invalid inputs in tests/contract/malformed_messages_test.cpp
 ### Implementation for Foundational Components
 
-- [ ] T009 [P] Implement card representation and deck shuffling in src/core/card.cpp and src/core/card.hpp
-- [ ] T010 [P] Implement hand ranking logic in src/core/hand_ranking.cpp and src/core/hand_ranking.hpp
-- [ ] T011 [P] Implement betting rules (minimum raise, valid actions) in src/core/betting_rules.cpp and src/core/betting_rules.hpp
-- [ ] T012 [P] Implement JSON serialization for core types and WebSocket message types in src/common/json_serialization.cpp and src/common/json_serialization.hpp
-- [ ] T013 [P] Implement basic WebSocket server skeleton (accept connections, echo) in src/server/server.cpp and src/server/server.hpp
-- [ ] T014 [P] Implement basic bot client skeleton (connect, ping) with command-line argument parsing in src/client/client.cpp and src/client/client.hpp
-- [ ] T015 [P] Create data model structs (Table, Player, Hand, Deck) in src/core/models/ (table.hpp, player.hpp, hand.hpp, deck.hpp)
-- [ ] T016 Implement common utilities (logging, UUID generation) in src/common/logging.cpp and src/common/uuid.cpp
+- [X] T009 [P] Implement card representation and deck shuffling in src/core/card.cpp and src/core/card.hpp
+- [X] T010 [P] Implement hand ranking logic in src/core/hand_ranking.cpp and src/core/hand_ranking.hpp
+- [X] T011 [P] Implement betting rules (minimum raise, valid actions) in src/core/betting_rules.cpp and src/core/betting_rules.hpp
+- [X] T012 [P] Implement JSON serialization for core types and WebSocket message types in src/common/json_serialization.cpp and src/common/json_serialization.hpp
+- [X] T013 [P] Implement basic WebSocket server skeleton (accept connections, echo) in src/server/server.cpp and src/server/server.hpp
+- [X] T014 [P] Implement basic bot client skeleton (connect, ping) with command-line argument parsing in src/client/client.cpp and src/client/client.hpp
+- [X] T015 [P] Create data model structs (Table, Player, Hand, Deck) in src/core/models/ (table.hpp, player.hpp, hand.hpp, deck.hpp)
+- [X] T016 Implement common utilities (logging, UUID generation) in src/common/logging.cpp and src/common/uuid.cpp
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -59,17 +59,17 @@
 
 ### Tests for User Story 1 (TDD)
 
-- [ ] T017 [P] [US1] Contract test for welcome message in tests/contract/welcome_test.cpp
-- [ ] T018 [P] [US1] Contract test for hand_started message in tests/contract/hand_started_test.cpp
-- [ ] T019 [P] [US1] Contract test for action_request and action_applied messages in tests/contract/action_messages_test.cpp
-- [ ] T020 [P] [US1] Contract test for hand_completed message in tests/contract/hand_completed_test.cpp
+- [X] T017 [P] [US1] Contract test for welcome message in tests/contract/welcome_test.cpp
+- [X] T018 [P] [US1] Contract test for hand_started message in tests/contract/hand_started_test.cpp
+- [X] T019 [P] [US1] Contract test for action_request and action_applied messages in tests/contract/action_messages_test.cpp
+- [X] T020 [P] [US1] Contract test for hand_completed message in tests/contract/hand_completed_test.cpp
 - [ ] T021 [P] [US1] Integration test for full hand flow in tests/integration/full_hand_test.cpp
 
 ### Implementation for User Story 1
 
-- [ ] T022 [P] [US1] Implement Table management (seat assignment, hand start) in src/server/table_manager.cpp and src/server/table_manager.hpp
-- [ ] T023 [P] [US1] Implement Hand state machine (betting rounds, community cards) in src/core/hand.cpp and src/core/hand.hpp
-- [ ] T024 [US1] Implement Player action processing (fold, call, raise) in src/server/player_action.cpp and src/server/player_action.hpp
+- [X] T022 [P] [US1] Implement Table management (seat assignment, hand start) in src/server/table_manager.cpp and src/server/table_manager.hpp
+- [X] T023 [P] [US1] Implement Hand state machine (betting rounds, community cards) in src/core/hand.cpp and src/core/hand.hpp
+- [X] T024 [US1] Implement Player action processing (fold, call, raise) in src/server/player_action.cpp and src/server/player_action.hpp
 - [ ] T025 [US1] Implement pot calculation and distribution in src/core/pot.cpp and src/core/pot.hpp
 - [ ] T026 [US1] Integrate WebSocket server with game logic (message handling) in src/server/game_session.cpp and src/server/game_session.hpp
 - [ ] T027 [US1] Implement server command line arguments (port, config) in src/server/main.cpp

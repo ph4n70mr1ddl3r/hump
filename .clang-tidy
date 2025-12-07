@@ -1,0 +1,14 @@
+---
+Checks: >
+    *,
+    -altera-*,
+    -fuchsia-*,
+    -android-*,
+    -cppcoreguidelines-avoid-magic-numbers,
+    -readability-magic-numbers,
+    -modernize-use-trailing-return-type,
+    -bugprone-easily-swappable-parameters
+WarningsAsErrors: '*'
+HeaderFilterRegex: ''
+FormatStyle: file
+...

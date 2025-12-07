@@ -1,0 +1,43 @@
+#pragma once
+
+#include "../card.hpp"
+#include <string>
+#include <vector>
+#include <cstdint>
+#include <optional>
+
+enum class ConnectionStatus {
+    CONNECTED,
+    DISCONNECTED,
+    RECONNECTING
+};
+
+struct Player {
+    std::string id; // UUID
+    std::string name; // optional display name
+    int stack; // current chip count
+    int seat; // which seat at the table (0 or 1)
+    std::vector<Card> hole_cards; // exactly 2 cards when in a hand
+    ConnectionStatus connection_status;
+    uint64_t last_action_timestamp; // milliseconds since epoch
+    std::optional<uint64_t> disconnected_at; // nullable timestamp
+    bool is_sitting_out; // true if player has been folded due to timeout
+
+    // Validation helper
+    bool isValid() const {
+        return stack >= 0 &&
+               (seat == 0 || seat == 1) &&
+               (hole_cards.size() == 0 || hole_cards.size() == 2);
+    }
+
+    // Check if player can act
+    bool canAct() const {
+        return connection_status == ConnectionStatus::CONNECTED &&
+               !is_sitting_out;
+    }
+
+    // Check if stack is below top-up threshold (5BB = 20 chips)
+    bool needsTopUp() const {
+        return stack < 20; // 5BB at 2/4 blinds
+    }
+};

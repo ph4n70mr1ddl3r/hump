@@ -1,0 +1,3 @@
+# Unit tests
+add_subdirectory(core)
+add_subdirectory(common)

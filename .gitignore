@@ -1,0 +1,91 @@
+# Build directories
+build/
+bin/
+obj/
+out/
+dist/
+*.exe
+*.out
+*.app
+
+# Compiled object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Static libraries
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.dll.a
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+compile_commands.json
+CTestTestfile.cmake
+*.cmake
+
+# IDE files
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Editor temporary files
+*~
+*.swp
+*.swo
+*.orig
+*.patch
+
+# Logs
+*.log
+logs/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Dependency directories
+node_modules/
+vendor/
+.venv/
+venv/
+__pycache__/
+
+# Coverage
+coverage/
+*.gcda
+*.gcno
+*.profraw
+
+# Package manager specific
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Project specific (C++ poker server)
+server/poker_server
+client/poker_bot
+tests/*_test
+*.test
+
+# Temporary files
+tmp/
+temp/
