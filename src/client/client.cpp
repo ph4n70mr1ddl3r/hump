@@ -9,12 +9,15 @@ namespace net = boost::asio;
 using tcp = net::ip::tcp;
 
 Client::Client(const std::string& host, const std::string& port, const std::string& name)
-    : host_(host), port_(port), name_(name)
+    : host_(host), port_(port), name_(name), player_id_(""), stack_(0)
 {
 }
 
 #include "../common/json_serialization.hpp"
 #include <nlohmann/json.hpp>
+#include "random_strategy.hpp"
+#include "delay.hpp"
+#include "stack_management.hpp"
 #include <iostream>
 #include <string>
 
@@ -48,6 +51,7 @@ void Client::run()
         }
         
         std::string player_id = welcome_json.at("payload").at("player_id").get<std::string>();
+        player_id_ = player_id;
         std::cout << "Assigned player ID: " << player_id << std::endl;
         
         // Send join message
@@ -97,19 +101,18 @@ void Client::run()
                 int min_raise = json.at("payload").at("min_raise").get<int>();
                 int max_raise = json.at("payload").at("max_raise").get<int>();
                 
-                // Simple strategy: always call if possible, else fold
-                std::string action;
-                int amount = 0;
-                if (call_amount <= max_raise)
-                {
-                    action = "call";
-                    amount = call_amount;
+                // Convert possible actions JSON array to vector<string>
+                std::vector<std::string> actions;
+                for (const auto& action : possible_actions) {
+                    actions.push_back(action.get<std::string>());
                 }
-                else
-                {
-                    action = "fold";
-                    amount = 0;
-                }
+                
+                // Use random strategy to choose action
+                RandomStrategy strategy;
+                auto [action, amount] = strategy.chooseAction(actions, call_amount, min_raise, max_raise);
+                
+                // Add human-like delay before responding
+                delay::randomDelay();
                 
                 nlohmann::json action_msg = {
                     {"type", "action"},
@@ -130,6 +133,27 @@ void Client::run()
             else if (type == "hand_completed")
             {
                 std::cout << "Hand completed: " << msg << std::endl;
+                // Parse updated stacks
+                const auto& payload = json.at("payload");
+                const auto& updated_stacks = payload.at("updated_stacks");
+                if (updated_stacks.contains(player_id_)) {
+                    stack_ = updated_stacks.at(player_id_).get<int>();
+                    // Check if stack below threshold, send top_up request
+                    if (stack_management::shouldTopUp(stack_)) {
+                        nlohmann::json top_up_msg = {
+                            {"type", "top_up"},
+                            {"payload", {}}
+                        };
+                        ws.write(net::buffer(top_up_msg.dump()));
+                        std::cout << "Sent top-up request (stack=" << stack_ << ")" << std::endl;
+                    }
+                }
+            }
+            else if (type == "top_up_ack")
+            {
+                const auto& payload = json.at("payload");
+                stack_ = payload.at("new_stack").get<int>();
+                std::cout << "Stack topped up to " << stack_ << std::endl;
             }
             else if (type == "error")
             {

@@ -6,6 +6,9 @@
 #include <cstdint>
 #include <optional>
 
+constexpr int TARGET_STACK = 400; // 100BB at 2/4 blinds
+constexpr int TOP_UP_THRESHOLD = 20; // 5BB at 2/4 blinds
+
 enum class ConnectionStatus {
     CONNECTED,
     DISCONNECTED,
@@ -38,6 +41,13 @@ struct Player {
 
     // Check if stack is below top-up threshold (5BB = 20 chips)
     bool needsTopUp() const {
-        return stack < 20; // 5BB at 2/4 blinds
+        return stack < TOP_UP_THRESHOLD;
+    }
+
+    // Top up stack to target (100BB) if below threshold
+    void topUp() {
+        if (needsTopUp()) {
+            stack = TARGET_STACK;
+        }
     }
 };

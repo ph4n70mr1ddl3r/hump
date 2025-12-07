@@ -3,7 +3,10 @@
 #include <iostream>
 
 WebSocketSession::WebSocketSession(tcp::socket socket)
-    : ws_(std::move(socket)), is_writing_(false)
+    : ws_(std::move(socket)), is_writing_(false),
+      ping_timer_(ws_.get_executor()),
+      pong_timeout_timer_(ws_.get_executor()),
+      pong_pending_(false)
 {
 }
 
@@ -59,14 +62,17 @@ void WebSocketSession::do_read()
 
 void WebSocketSession::on_read(beast::error_code ec, std::size_t bytes_transferred)
 {
-    if (ec == websocket::error::closed)
-    {
-        // Connection closed gracefully
-        return;
-    }
     if (ec)
     {
-        std::cerr << "WebSocket read error: " << ec.message() << std::endl;
+        if (ec != websocket::error::closed)
+        {
+            std::cerr << "WebSocket read error: " << ec.message() << std::endl;
+        }
+        // Notify game session about disconnection
+        if (auto game_session = game_session_.lock())
+        {
+            game_session->onDisconnect(shared_from_this());
+        }
         return;
     }
     

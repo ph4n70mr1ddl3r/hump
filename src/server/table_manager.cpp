@@ -124,6 +124,11 @@ void TableManager::endHand() {
     // Distribute pot (main pot and side pots)
     pot::distributePot(*hand, winners);
     
+    // Top up players if needed (between hands)
+    for (auto& player : players_) {
+        player->topUp();
+    }
+    
     // Update table pot to zero (already zero after distribution)
     table_.pot = hand->pot;
     

@@ -87,16 +87,16 @@
 
 ### Tests for User Story 2 (TDD)
 
-- [ ] T029 [P] [US2] Unit test for random decision logic in tests/unit/client/random_strategy_test.cpp
-- [ ] T030 [P] [US2] Unit test for stack top-up logic in tests/unit/client/stack_management_test.cpp
-- [ ] T031 [P] [US2] Integration test for bot behavior with delays in tests/integration/bot_behavior_test.cpp
+- [X] T029 [P] [US2] Unit test for random decision logic in tests/unit/client/random_strategy_test.cpp
+- [X] T030 [P] [US2] Unit test for stack top-up logic in tests/unit/client/stack_management_test.cpp
+- [X] T031 [P] [US2] Integration test for bot behavior with delays in tests/integration/bot_behavior_test.cpp
 
 ### Implementation for User Story 2
 
-- [ ] T032 [P] [US2] Implement random strategy (fold/call/raise with raise amounts between minimum raise and player's stack) in src/client/random_strategy.cpp and src/client/random_strategy.hpp
-- [ ] T033 [P] [US2] Implement delay mechanism (0.5-3 seconds) in src/client/delay.cpp and src/client/delay.hpp
-- [ ] T034 [US2] Implement stack top-up detection and execution (between hands) in src/client/stack_management.cpp and src/client/stack_management.hpp
-- [ ] T035 [US2] Integrate random strategy and delays into bot main loop in src/client/bot.cpp
+- [X] T032 [P] [US2] Implement random strategy (fold/call/raise with raise amounts between minimum raise and player's stack) in src/client/random_strategy.cpp and src/client/random_strategy.hpp
+- [X] T033 [P] [US2] Implement delay mechanism (0.5-3 seconds) in src/client/delay.cpp and src/client/delay.hpp
+- [X] T034 [US2] Implement stack top-up detection and execution (between hands) in src/client/stack_management.cpp and src/client/stack_management.hpp
+- [X] T035 [US2] Integrate random strategy and delays into bot main loop in src/client/bot.cpp
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -110,14 +110,14 @@
 
 ### Tests for User Story 3 (TDD)
 
-- [ ] T036 [P] [US3] Unit test for disconnection timer logic in tests/unit/server/disconnection_timer_test.cpp
-- [ ] T037 [P] [US3] Integration test for disconnection and reconnection flow in tests/integration/disconnection_test.cpp
+- [X] T036 [P] [US3] Unit test for disconnection timer logic in tests/unit/server/disconnection_timer_test.cpp
+- [X] T037 [P] [US3] Integration test for disconnection and reconnection flow in tests/integration/disconnection_test.cpp
 
 ### Implementation for User Story 3
 
-- [ ] T038 [P] [US3] Implement disconnection detection and grace timer in src/server/connection_manager.cpp and src/server/connection_manager.hpp
+- [X] T038 [P] [US3] Implement disconnection detection and grace timer in src/server/connection_manager.cpp and src/server/connection_manager.hpp
 - [ ] T039 [P] [US3] Implement player state management for disconnected/reconnecting players in src/server/player_state.cpp and src/server/player_state.hpp
-- [ ] T040 [US3] Implement removal timeout logic (remove inactive players) in src/server/player_removal.cpp and src/server/player_removal.hpp
+- [X] T040 [US3] Implement removal timeout logic (remove inactive players) in src/server/player_removal.cpp and src/server/player_removal.hpp
 - [ ] T041 [US3] Implement WebSocket ping/pong keep-alive and timeout handling in src/server/websocket_session.cpp
 
 **Checkpoint**: All user stories should now be independently functional

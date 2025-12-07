@@ -1,6 +1,5 @@
-# Client executable
-add_executable(poker_bot
-    main.cpp
+# Client library
+add_library(client_lib STATIC
     client.cpp
     bot.cpp
     random_strategy.cpp
@@ -8,5 +7,9 @@ add_executable(poker_bot
     stack_management.cpp
 )
 
-target_include_directories(poker_bot PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(poker_bot PUBLIC core common Boost::system Boost::boost)
+target_include_directories(client_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(client_lib PUBLIC core common)
+
+# Client executable
+add_executable(poker_bot main.cpp)
+target_link_libraries(poker_bot PUBLIC client_lib core common Boost::system Boost::boost)

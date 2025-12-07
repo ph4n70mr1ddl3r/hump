@@ -1,0 +1,11 @@
+# Client unit tests
+
+# random_strategy_test
+add_executable(random_strategy_test random_strategy_test.cpp)
+target_link_libraries(random_strategy_test gtest_main client_lib core common)
+gtest_discover_tests(random_strategy_test)
+
+# stack_management_test
+add_executable(stack_management_test stack_management_test.cpp)
+target_link_libraries(stack_management_test gtest_main client_lib core common)
+gtest_discover_tests(stack_management_test)

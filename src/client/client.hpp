@@ -11,4 +11,6 @@ private:
     std::string host_;
     std::string port_;
     std::string name_;
+    std::string player_id_;
+    int stack_;
 };

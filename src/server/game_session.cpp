@@ -7,10 +7,16 @@
 
 namespace beast = boost::beast;
 
-GameSession::GameSession(int action_timeout_ms, int disconnect_grace_time_ms, int removal_timeout_ms)
+GameSession::GameSession(boost::asio::io_context& ioc, int action_timeout_ms, int disconnect_grace_time_ms, int removal_timeout_ms)
     : action_timeout_ms_(action_timeout_ms),
       disconnect_grace_time_ms_(disconnect_grace_time_ms),
-      removal_timeout_ms_(removal_timeout_ms)
+      removal_timeout_ms_(removal_timeout_ms),
+      ioc_(ioc),
+      connection_manager_(ioc),
+      player_state_manager_(connection_manager_, table_manager_, disconnect_grace_time_ms, removal_timeout_ms,
+          [this](const std::string& player_id) {
+              broadcastPlayerRemoved(player_id);
+          })
 {
 }
 
@@ -32,6 +38,10 @@ void GameSession::handleMessage(const std::string& message, std::shared_ptr<WebS
         else if (type == "ping")
         {
             handlePing(json.at("payload"), session);
+        }
+        else if (type == "top_up")
+        {
+            handleTopUp(json.at("payload"), session);
         }
         else
         {
@@ -292,6 +302,19 @@ void GameSession::broadcastHandCompleted()
     broadcastJson(message);
 }
 
+void GameSession::broadcastPlayerRemoved(const std::string& player_id)
+{
+    nlohmann::json payload = {
+        {"player_id", player_id},
+        {"seat", 0} // TODO: get seat from player
+    };
+    nlohmann::json message = {
+        {"type", "player_removed"},
+        {"payload", payload}
+    };
+    broadcastJson(message);
+}
+
 void GameSession::registerSession(const std::string& player_id, std::shared_ptr<WebSocketSession> session)
 {
     player_sessions_[player_id] = session;
@@ -306,6 +329,41 @@ void GameSession::removeSession(const std::string& player_id)
         session_to_player_.erase(it->second);
         player_sessions_.erase(it);
     }
+}
+
+void GameSession::onDisconnect(std::shared_ptr<WebSocketSession> session)
+{
+    // Find player_id associated with this session
+    auto it = session_to_player_.find(session);
+    if (it == session_to_player_.end())
+    {
+        return; // No player registered for this session
+    }
+    std::string player_id = it->second;
+    
+    // Remove session mapping (session is dead)
+    removeSession(player_id);
+    
+    // Get player from table
+    auto player = table_manager_.getPlayer(player_id);
+    if (!player)
+    {
+        return; // Player not seated
+    }
+    
+    // Notify player state manager
+    player_state_manager_.onDisconnect(*player);
+    
+    // Broadcast player_disconnected message
+    nlohmann::json payload = {
+        {"player_id", player_id},
+        {"remaining_grace_time_ms", disconnect_grace_time_ms_}
+    };
+    nlohmann::json message = {
+        {"type", "player_disconnected"},
+        {"payload", payload}
+    };
+    broadcastJson(message);
 }
 
 std::string GameSession::generatePlayerId()
@@ -502,6 +560,52 @@ void GameSession::handlePing(const nlohmann::json& payload, std::shared_ptr<WebS
         {"payload", {}}
     };
     sendJson(session, pong);
+}
+
+void GameSession::handleTopUp(const nlohmann::json& payload, std::shared_ptr<WebSocketSession> session)
+{
+    // Get player_id from session
+    auto it = session_to_player_.find(session);
+    if (it == session_to_player_.end())
+    {
+        nlohmann::json error = {
+            {"type", "error"},
+            {"payload", {
+                {"code", "unauthorized"},
+                {"message", "Player not registered"}
+            }}
+        };
+        sendJson(session, error);
+        return;
+    }
+    std::string player_id = it->second;
+    
+    auto player = table_manager_.getPlayer(player_id);
+    if (!player)
+    {
+        nlohmann::json error = {
+            {"type", "error"},
+            {"payload", {
+                {"code", "player_not_found"},
+                {"message", "Player not seated at table"}
+            }}
+        };
+        sendJson(session, error);
+        return;
+    }
+    
+    // Top up if needed
+    player->topUp();
+    
+    // Send acknowledgment
+    nlohmann::json ack = {
+        {"type", "top_up_ack"},
+        {"payload", {
+            {"player_id", player_id},
+            {"new_stack", player->stack}
+        }}
+    };
+    sendJson(session, ack);
 }
 
 void GameSession::sendJson(std::shared_ptr<WebSocketSession> session, const nlohmann::json& json)

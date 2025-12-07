@@ -1,5 +1,5 @@
-# Server executable
-add_executable(poker_server
+# Server library
+add_library(server_lib STATIC
     server.cpp
     table_manager.cpp
     player_action.cpp
@@ -8,8 +8,11 @@ add_executable(poker_server
     player_state.cpp
     player_removal.cpp
     websocket_session.cpp
-    main.cpp
 )
 
-target_include_directories(poker_server PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(poker_server PUBLIC core common Boost::system Boost::boost)
+target_include_directories(server_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(server_lib PUBLIC core common Boost::system Boost::boost)
+
+# Server executable
+add_executable(poker_server main.cpp)
+target_link_libraries(poker_server PUBLIC server_lib)

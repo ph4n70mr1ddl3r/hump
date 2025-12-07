@@ -11,7 +11,7 @@ Server::Server(boost::asio::io_context& ioc, unsigned short port,
       action_timeout_ms_(action_timeout_ms),
       disconnect_grace_time_ms_(disconnect_grace_time_ms),
       removal_timeout_ms_(removal_timeout_ms),
-      game_session_(std::make_shared<GameSession>(action_timeout_ms, disconnect_grace_time_ms, removal_timeout_ms))
+      game_session_(std::make_shared<GameSession>(ioc, action_timeout_ms, disconnect_grace_time_ms, removal_timeout_ms))
 {
     start_accept();
 }
