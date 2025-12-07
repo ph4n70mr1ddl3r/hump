@@ -10,19 +10,22 @@ int main(int argc, char** argv) {
     int disconnect_grace_time_ms = 30000;
     int removal_timeout_ms = 60000;
 
-    // Simple argument parsing
+    // Simple argument parsing (supports spec names: ample-time, removal-timeout)
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         if (arg == "--port" && i + 1 < argc) {
             port = static_cast<unsigned short>(std::stoi(argv[++i]));
-        } else if (arg == "--action-timeout" && i + 1 < argc) {
-            action_timeout_ms = std::stoi(argv[++i]);
+        } else if (arg == "--ample-time" && i + 1 < argc) {
+            disconnect_grace_time_ms = std::stoi(argv[++i]);
         } else if (arg == "--disconnect-grace-time" && i + 1 < argc) {
             disconnect_grace_time_ms = std::stoi(argv[++i]);
+        } else if (arg == "--action-timeout" && i + 1 < argc) {
+            action_timeout_ms = std::stoi(argv[++i]);
         } else if (arg == "--removal-timeout" && i + 1 < argc) {
             removal_timeout_ms = std::stoi(argv[++i]);
         } else if (arg == "--help") {
-            std::cout << "Usage: " << argv[0] << " [--port <port>] [--action-timeout <ms>] [--disconnect-grace-time <ms>] [--removal-timeout <ms>]\n";
+            std::cout << "Usage: " << argv[0] << " [--port <port>] [--ample-time <seconds>] [--removal-timeout <seconds>] [--action-timeout <ms>]\n";
+            std::cout << "Defaults: port=8080, ample-time=30s, removal-timeout=60s, action-timeout=30000ms\n";
             return 0;
         } else {
             std::cerr << "Unknown argument: " << arg << "\n";

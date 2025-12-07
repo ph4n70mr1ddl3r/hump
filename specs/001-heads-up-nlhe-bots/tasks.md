@@ -63,17 +63,17 @@
 - [X] T018 [P] [US1] Contract test for hand_started message in tests/contract/hand_started_test.cpp
 - [X] T019 [P] [US1] Contract test for action_request and action_applied messages in tests/contract/action_messages_test.cpp
 - [X] T020 [P] [US1] Contract test for hand_completed message in tests/contract/hand_completed_test.cpp
-- [ ] T021 [P] [US1] Integration test for full hand flow in tests/integration/full_hand_test.cpp
+- [X] T021 [P] [US1] Integration test for full hand flow in tests/integration/full_hand_test.cpp
 
 ### Implementation for User Story 1
 
 - [X] T022 [P] [US1] Implement Table management (seat assignment, hand start) in src/server/table_manager.cpp and src/server/table_manager.hpp
 - [X] T023 [P] [US1] Implement Hand state machine (betting rounds, community cards) in src/core/hand.cpp and src/core/hand.hpp
 - [X] T024 [US1] Implement Player action processing (fold, call, raise) in src/server/player_action.cpp and src/server/player_action.hpp
-- [ ] T025 [US1] Implement pot calculation and distribution in src/core/pot.cpp and src/core/pot.hpp
-- [ ] T026 [US1] Integrate WebSocket server with game logic (message handling) in src/server/game_session.cpp and src/server/game_session.hpp
-- [ ] T027 [US1] Implement server command line arguments (port, config) in src/server/main.cpp
-- [ ] T028 [US1] Implement client join flow (welcome, join messages) in src/client/bot.cpp
+- [X] T025 [US1] Implement pot calculation and distribution in src/core/pot.cpp and src/core/pot.hpp
+- [X] T026 [US1] Integrate WebSocket server with game logic (message handling) in src/server/game_session.cpp and src/server/game_session.hpp
+- [X] T027 [US1] Implement server command line arguments (port, config) in src/server/main.cpp
+- [X] T028 [US1] Implement client join flow (welcome, join messages) in src/client/bot.cpp
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 

@@ -2,6 +2,7 @@
 #include "models/player.hpp"
 #include "models/table.hpp"
 #include "models/hand.hpp"
+#include "hand_ranking.hpp"
 #include <algorithm>
 #include <vector>
 #include <cassert>
@@ -64,24 +65,45 @@ std::vector<Player*> getEligiblePlayersForPot(const std::vector<Player*>& player
 }
 
 void distributePot(Hand& hand, const std::vector<Player*>& winners) {
-    // For now, simple distribution: all winners split the main pot equally
-    // In real implementation, need to consider side pots and hand ranking
-    if (winners.empty() || hand.pot == 0) {
-        return;
-    }
-    
-    int share = hand.pot / winners.size();
-    int remainder = hand.pot % winners.size();
-    
-    for (size_t i = 0; i < winners.size(); ++i) {
-        int amount = share + (i < static_cast<size_t>(remainder) ? 1 : 0);
-        if (amount > 0) {
-            awardPot(winners[i], amount);
+    // Distribute main pot to winners (as before)
+    if (!winners.empty() && hand.pot > 0) {
+        int share = hand.pot / winners.size();
+        int remainder = hand.pot % winners.size();
+        for (size_t i = 0; i < winners.size(); ++i) {
+            int amount = share + (i < static_cast<size_t>(remainder) ? 1 : 0);
+            if (amount > 0) {
+                awardPot(winners[i], amount);
+            }
         }
+        hand.pot = 0;
     }
-    
-    // Reset pot after distribution
-    hand.pot = 0;
+
+    // Distribute side pots
+    for (SidePot& side_pot : hand.side_pots) {
+        if (side_pot.amount == 0) continue;
+        // Filter winners who are eligible for this side pot
+        std::vector<Player*> eligible_winners;
+        for (Player* winner : winners) {
+            if (std::find(side_pot.eligible_players.begin(), side_pot.eligible_players.end(), winner) != side_pot.eligible_players.end()) {
+                eligible_winners.push_back(winner);
+            }
+        }
+        // If no eligible winners (should not happen), skip
+        if (eligible_winners.empty()) continue;
+        // Split side pot among eligible winners equally (since they already have same hand rank)
+        int share = side_pot.amount / eligible_winners.size();
+        int remainder = side_pot.amount % eligible_winners.size();
+        for (size_t i = 0; i < eligible_winners.size(); ++i) {
+            int amount = share + (i < static_cast<size_t>(remainder) ? 1 : 0);
+            if (amount > 0) {
+                awardPot(eligible_winners[i], amount);
+            }
+        }
+        side_pot.amount = 0;
+    }
+    // Clear side pots with zero amount
+    hand.side_pots.erase(std::remove_if(hand.side_pots.begin(), hand.side_pots.end(),
+        [](const SidePot& sp) { return sp.amount == 0; }), hand.side_pots.end());
 }
 
 void awardPot(Player* player, int amount) {

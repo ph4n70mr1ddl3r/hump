@@ -1,5 +1,7 @@
 #include "table_manager.hpp"
 #include "../core/deck.hpp"
+#include "../core/hand.hpp"
+#include "../core/pot.hpp"
 #include "player_action.hpp"
 #include <stdexcept>
 #include <algorithm>
@@ -113,12 +115,26 @@ void TableManager::endHand() {
     if (table_.current_hand == nullptr) {
         return;
     }
-    // Distribute pot, update stacks, etc. (TBD in pot calculation)
+    Hand* hand = table_.current_hand;
+    
+    // Determine winners
+    std::vector<Player*> winners = poker::determineWinners(*hand);
+    hand->winners = winners;
+    
+    // Distribute pot (main pot and side pots)
+    pot::distributePot(*hand, winners);
+    
+    // Update table pot to zero (already zero after distribution)
+    table_.pot = hand->pot;
+    
+    // Set completion timestamp (placeholder)
+    hand->completed_at = 1; // TODO: real timestamp
+    
+    // Clear current hand
     current_hand_.reset();
     table_.current_hand = nullptr;
     table_.state = TableState::WAITING_FOR_PLAYERS;
     table_.community_cards.clear();
-    table_.pot = 0;
     // Rotate dealer button
     table_.dealer_button_position = (table_.dealer_button_position + 1) % 2;
 }

@@ -1,6 +1,7 @@
 #include "game_session.hpp"
 #include "../common/json_serialization.hpp"
 #include "../common/uuid.hpp"
+#include "../core/hand.hpp"
 #include <boost/beast.hpp>
 #include <iostream>
 
@@ -229,12 +230,53 @@ void GameSession::broadcastHandCompleted()
     const Hand* hand = table_manager_.getCurrentHand();
     if (!hand) return;
     
-    // TODO: compute winners, pot distribution, updated stacks
     nlohmann::json winners = nlohmann::json::array();
     nlohmann::json pot_distribution = nlohmann::json::array();
     nlohmann::json updated_stacks = nlohmann::json::object();
     
-    // Placeholder: assume hand completed with no winners
+    // Compute total pot (main + side pots)
+    int total_pot = hand->pot;
+    for (const SidePot& side_pot : hand->side_pots) {
+        total_pot += side_pot.amount;
+    }
+    
+    // Determine winners (use hand->winners if populated, else compute)
+    std::vector<Player*> win_players = hand->winners;
+    if (win_players.empty()) {
+        win_players = poker::determineWinners(*hand);
+    }
+    
+    // Prepare winners array and pot distribution
+    if (!win_players.empty() && total_pot > 0) {
+        int share = total_pot / win_players.size();
+        int remainder = total_pot % win_players.size();
+        for (size_t i = 0; i < win_players.size(); ++i) {
+            Player* winner = win_players[i];
+            int amount = share + (i < static_cast<size_t>(remainder) ? 1 : 0);
+            // Winner entry
+            nlohmann::json winner_json = {
+                {"player_id", winner->id},
+                {"amount_won", amount},
+                {"hand_rank", "unknown"} // TODO: compute hand rank string
+            };
+            winners.push_back(winner_json);
+            // Pot distribution entry (single pot for simplicity)
+            nlohmann::json dist_json = {
+                {"pot_index", 0},
+                {"winner_id", winner->id},
+                {"amount", amount}
+            };
+            pot_distribution.push_back(dist_json);
+        }
+    }
+    
+    // Updated stacks (current stack of each player)
+    for (Player* player : hand->players) {
+        if (player) {
+            updated_stacks[player->id] = player->stack;
+        }
+    }
+    
     nlohmann::json payload = {
         {"hand_id", hand->id},
         {"winners", winners},
@@ -444,7 +486,13 @@ void GameSession::handleAction(const nlohmann::json& payload, std::shared_ptr<We
     {
         sendActionRequest(current_hand->current_player_to_act->id);
     }
-    // TODO: check if hand completed (all but one folded or showdown)
+    
+    // Check if hand is complete
+    const Hand* hand_after = table_manager_.getCurrentHand();
+    if (hand_after && poker::isHandComplete(*hand_after)) {
+        broadcastHandCompleted();
+        table_manager_.endHand();
+    }
 }
 
 void GameSession::handlePing(const nlohmann::json& payload, std::shared_ptr<WebSocketSession> session)
