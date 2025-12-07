@@ -35,7 +35,7 @@
 - [ ] T006 [P] Write unit tests for betting rules in tests/unit/core/betting_rules_test.cpp
 - [ ] T007 [P] Write unit tests for JSON serialization in tests/unit/common/json_serialization_test.cpp
 - [ ] T008 [P] Write integration test for WebSocket connection in tests/integration/websocket_connection_test.cpp
-
+- [ ] T008b [P] Contract test for malformed messages and invalid inputs in tests/contract/malformed_messages_test.cpp
 ### Implementation for Foundational Components
 
 - [ ] T009 [P] Implement card representation and deck shuffling in src/core/card.cpp and src/core/card.hpp
@@ -131,7 +131,8 @@
 - [ ] T042 [P] Documentation updates in README.md and quickstart.md validation
 - [ ] T043 [P] Code cleanup and refactoring (ensure consistent style)
 - [ ] T044 [P] Performance optimization across all stories (latency measurements)
-- [ ] T045 [P] Additional unit tests for edge cases in tests/unit/edge_cases/
+- [ ] T045 [P] Additional unit tests for edge cases in tests/unit/edge_cases/ (see spec.md:58-66: simultaneous disconnection, invalid bets, raise exceeding stack, network latency, server crash, top-up during hand, split pots)
+- [ ] T045b [P] Integration test for 100 consecutive hands stability (SC-001) in tests/integration/stability_test.cpp
 - [ ] T046 Security hardening (input validation, message sanitization)
 - [ ] T047 Run quickstart.md validation end-to-end
 
