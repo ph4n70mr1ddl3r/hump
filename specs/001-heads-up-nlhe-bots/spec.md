@@ -5,6 +5,16 @@
 **Status**: Draft  
 **Input**: User description: "Build a server that will host 2 clients that will play heads up nlhe. It will use the standard NLHE rules. Handle timeouts gracefully. Build a client that will connect to the server and will start with 100BB. It will be a bot playing with a random strategy. If the stack goes below 5BB, it will automatically top up to 100BB. It will have random delay like a human player. If the client is disconnected, it will be given ample time to return, otherwise it will be considered folded and sat out. After a while it will be removed from the table if it does not return. The server must handle everything gracefully. The server will only accommodate 2 players. So it basically has only 1 table. In order to simplify, the blinds will be at 2/4, and bets must be integers."
 
+## Clarifications
+
+### Session 2025-12-07
+
+- Q: How should split pots (tied hands) be handled? → A: Divide pot equally among winners, with odd chips given to player in earliest position (button order).
+- Q: How should server configuration (timeouts, blinds, etc.) be provided? → A: Command-line arguments only (simple, explicit).
+- Q: How should the server handle crashes mid-hand? → A: Game resets on restart (no persistence).
+- Q: How should the server handle invalid bets (non-integer, negative, or exceeding stack)? → A: Exceeding stack treated as all-in; negative/invalid treated as check/fold.
+- Q: How should the server handle raise amounts that exceed opponent's stack? → A: Treat as all-in (opponent can call with remaining stack).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Server hosts NLHE game between two bots (Priority: P1)
@@ -58,12 +68,12 @@ As an operator, I want the server to handle client disconnections gracefully by 
 ### Edge Cases
 
 - What happens when both bots disconnect simultaneously?
-- How does the server handle invalid bets (non-integer, negative, or exceeding stack)?
-- What happens when a bot's random decision results in a raise amount that exceeds the opponent's stack?
+- Invalid bets: exceeding stack treated as all-in; negative/non-integer treated as check/fold.
+- Raise amounts exceeding opponent's stack are treated as all-in (opponent can call with remaining stack).
 - How does the system handle network latency and packet loss?
-- What happens when the server crashes mid-hand? (Should maintain state on restart?)
+- Server crashes mid-hand result in game reset on restart (no persistence).
 - What if a bot tops up during a hand? (Should only happen between hands)
-- How are tied hands (split pots) handled?
+- Tied hands (split pots) are handled by dividing pot equally among winners, with odd chips given to player in earliest position (button order).
 
 ## Requirements *(mandatory)*
 
@@ -79,8 +89,9 @@ As an operator, I want the server to handle client disconnections gracefully by 
 - **FR-008**: Client MUST automatically top up stack to 100BB when stack falls below 5BB (between hands, not during a hand).
 - **FR-009**: Client MUST introduce random delay between 0.5 and 3 seconds before each action to simulate human play.
 - **FR-010**: Server MUST handle network timeouts and malformed messages gracefully without crashing.
-
-
+- **FR-011**: Server configuration (port, timeouts, etc.) MUST be provided via command-line arguments.
+- **FR-012**: Server MUST handle invalid bets appropriately: bets exceeding player's stack treated as all-in; negative or non-integer bets treated as check or fold.
+- **FR-013**: Server MUST handle raise amounts exceeding opponent's stack as all-in bets (opponent can call with remaining stack).
 
 ### Key Entities *(include if feature involves data)*
 
