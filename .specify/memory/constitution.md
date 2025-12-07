@@ -1,50 +1,44 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+Version change: 0.0.0 → 1.0.0
+Modified principles:
+- Added: I. Code Quality
+- Added: II. Testing Standards
+- Added: III. User Experience Consistency
+- Added: IV. Performance Requirements
+Added sections: Additional Constraints, Development Workflow, Governance
+Removed sections: None
+Templates requiring updates:
+- .specify/templates/plan-template.md: ✅ no updates required
+- .specify/templates/spec-template.md: ✅ no updates required
+- .specify/templates/tasks-template.md: ✅ no updates required
+- .opencode/command/*.md: ✅ no updates required
+Follow-up TODOs: None
+-->
+
+# Hump Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Code Quality
+All code MUST adhere to established linting and formatting standards. Code reviews MUST focus on readability, maintainability, and adherence to SOLID principles. Technical debt MUST be documented and addressed in a timely manner. Rationale: Consistent code quality reduces bugs, eases onboarding, and enables sustainable development.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Testing Standards
+Test-Driven Development (TDD) is REQUIRED for all new features: tests MUST be written and approved before implementation. Unit, integration, and contract tests MUST be maintained with minimum coverage thresholds. Integration tests are REQUIRED for new library contracts, contract changes, and inter-service communication. Rationale: Comprehensive testing ensures reliability, prevents regressions, and enables safe refactoring.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. User Experience Consistency
+User interfaces MUST maintain consistency across all screens and workflows. Accessibility standards (WCAG) MUST be followed. User feedback MUST be systematically collected and incorporated into design iterations. Rationale: Consistent and accessible UX reduces cognitive load, improves usability, and meets legal/compliance requirements.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Performance Requirements
+Performance budgets MUST be defined and monitored for all user-facing operations. Scalability targets MUST be established and validated under load. Monitoring and observability MUST be implemented for critical paths. Rationale: Performance is a feature; meeting performance requirements ensures user satisfaction and system reliability under load.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+## Additional Constraints
+No additional constraints beyond the Core Principles. Any future constraints MUST be documented here after formal amendment.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
-
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
-
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
-
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+## Development Workflow
+All features MUST follow the specification → plan → tasks workflow defined in `.specify/templates/`. User stories MUST be independently testable and prioritised. Implementation MUST adhere to the Constitution's principles.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+Amendments require documentation, approval, and migration plan. All PRs/reviews MUST verify compliance with Constitution. Complexity MUST be justified. Use `.specify/` templates for runtime development guidance.
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
-
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2025-12-07 | **Last Amended**: 2025-12-07
