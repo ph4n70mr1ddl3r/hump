@@ -1,13 +1,13 @@
 # Implementation Plan: Heads-up NLHE Bot Server
 
-**Branch**: `001-heads-up-nlhe-bots` | **Date**: Sun Dec 07 2025 | **Spec**: [spec.md](./spec.md)
-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+**Branch**: `001-heads-up-nlhe-bots` | **Date**: 2025-12-07 | **Spec**: [spec.md](./spec.md)
+**Input**: Feature specification from `/specs/001-heads-up-nlhe-bots/spec.md`
 
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
 ## Summary
 
-Implement a server hosting a single heads-up No Limit Texas Hold'em table for two bot clients. Server uses C++17 with Boost.Beast for WebSocket communication, nlohmann/json for message serialization, and Google Test for testing. Bots play with random strategy, human-like delays, and automatic stack top-up. Server handles disconnections gracefully with configurable timeouts.
+Build a C++ server hosting a single heads-up No Limit Texas Hold'em table for two WebSocket clients, implementing standard NLHE rules with configurable timeouts, random-strategy bots, automatic stack top-up, and graceful disconnection handling. Technical approach: C++17 with Boost.Beast for WebSocket communication, nlohmann/json for message serialization, Boost.Asio for asynchronous I/O, and Google Test for unit/integration testing.
 
 ## Technical Context
 
@@ -20,57 +20,41 @@ Implement a server hosting a single heads-up No Limit Texas Hold'em table for tw
 **Language/Version**: C++17  
 **Primary Dependencies**: Boost.Beast (WebSocket/HTTP), nlohmann/json, Boost.Asio  
 **Storage**: N/A (no persistence)  
-**Testing**: Google Test (gtest)  
-**Target Platform**: Linux server
-**Project Type**: single (server)  
-**Performance Goals**: 
-  - 95th‑percentile hand‑action latency ≤ 1 s (including bot delay).
-  - Server startup time ≤ 2 s.
-  - Max reconnect delay (ample‑time) ≤ 30 s (configurable).
-  - Total chip count conserved across 1000 hands (zero leak).  
-**Constraints**: Must handle client disconnections with configurable timeouts; bets must be integers; no persistence required.  
-**Scale/Scope**: Single table, 2 players, no scaling required.
+**Testing**: Google Test  
+**Target Platform**: Linux server  
+**Project Type**: single (server application)  
+**Performance Goals**: Sub-second latency, 100+ hands/hour  
+**Constraints**: Integer bets only (2/4 blinds), max 2 players, configurable timeouts via command-line (--port, --ample-time, --removal-timeout), WebSocket ping/pong interval 30s, logging via Boost.Log, build system CMake  
+**Scale/Scope**: Single table, two players
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-### I. Code Quality
-- **Requirement**: All code MUST adhere to established linting and formatting standards.
-- **Compliance**: Plan includes clang‑format/clang‑tidy; C++17 standard conventions followed.
-- **Status**: ✅ PASS
+**Code Quality Gate**
+- Linting/formatting standards: clang-format (LLVM style), clang-tidy for static analysis
+- SOLID principles adherence: To be verified during implementation
 
-### II. Testing Standards
-- **Requirement**: TDD REQUIRED for all new features; unit, integration, contract tests maintained.
-- **Compliance**: Google Test (gtest) selected; poker logic will be unit‑tested; integration tests for WebSocket communication.
-- **Status**: ✅ PASS
+**Testing Standards Gate**
+- TDD required: Yes, tests must be written before implementation
+- Unit/integration/contract tests: Google Test framework selected
+- Minimum coverage thresholds: 80% line coverage for unit tests
 
-### III. User Experience Consistency
-- **Requirement**: User interfaces MUST maintain consistency across all screens and workflows.
-- **Compliance**: Not directly applicable (headless server), but WebSocket API will follow consistent message patterns.
-- **Status**: ✅ PASS (with note)
+**User Experience Consistency Gate**
+- CLI interface consistency: GNU Coding Standards (long options with --, optional short options -p, -a, -r)
+- WebSocket API consistency: To be defined in contracts
+- Accessibility standards: N/A (no UI)
 
-### IV. Performance Requirements
-- **Requirement**: Performance budgets MUST be defined and monitored for all user-facing operations.
-- **Compliance**: Performance budgets defined (95th‑percentile latency ≤ 1 s, startup ≤ 2 s, reconnect delay ≤ 30 s, chip‑conservation).
-- **Status**: ✅ PASS
-
-### Development Workflow
-- **Requirement**: All features MUST follow specification → plan → tasks workflow.
-- **Compliance**: This plan follows `.specify/` templates; spec, plan, tasks phases executed.
-- **Status**: ✅ PASS
-
-### Governance
-- **Requirement**: Amendments require documentation, approval; complexity MUST be justified.
-- **Compliance**: Complexity tracked in “Complexity Tracking” section; any violations justified.
-- **Status**: ✅ PASS
+**Performance Requirements Gate**
+- Performance budgets defined: Sub-second latency, 100+ hands/hour
+- Monitoring/observability: Console logging with debug/info/error levels via Boost.Log
 
 ## Project Structure
 
 ### Documentation (this feature)
 
 ```text
-specs/[###-feature]/
+specs/001-heads-up-nlhe-bots/
 ├── plan.md              # This file (/speckit.plan command output)
 ├── research.md          # Phase 0 output (/speckit.plan command)
 ├── data-model.md        # Phase 1 output (/speckit.plan command)
@@ -89,19 +73,18 @@ specs/[###-feature]/
 
 ```text
 src/
-├── core/           # Shared poker logic (hand ranking, betting rules, deck)
-├── server/         # WebSocket server, table management, connection handling
-├── client/         # Bot client implementation, random strategy, delays
-├── common/         # Shared utilities (logging, random number generation, config)
-└── third_party/    # Vendored dependencies (if any)
+├── core/           # Poker logic (hand evaluation, deck, betting)
+├── server/         # WebSocket server, table management
+├── client/         # Bot client logic
+└── shared/         # Common utilities (logging, config parsing)
 
 tests/
-├── unit/           # Unit tests for core logic
-├── integration/    # Integration tests for server‑client communication
-└── contract/       # Contract tests for WebSocket API (optional)
+├── unit/           # Unit tests for core, server, client
+├── integration/    # Integration tests (server-client)
+└── contract/       # Contract tests for WebSocket API
 ```
 
-**Structure Decision**: Single CMake project with multiple executables and a shared core library, as outlined in research.md. The `src/` directory is organized by domain (core, server, client) rather than by technical layer (models, services) to keep related code together and simplify dependencies.
+**Structure Decision**: Single project structure with `src/` and `tests/` directories as shown above. This follows the standard C++ project layout and aligns with the existing AGENTS.md guidance.
 
 ## Complexity Tracking
 

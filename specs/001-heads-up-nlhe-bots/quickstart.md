@@ -74,21 +74,9 @@ Integration tests (require server running) are available in `tests/integration/`
 
 ## Configuration
 
-### Server Configuration File
+Server configuration is provided exclusively via command‑line arguments (see “Running the Server” above). No configuration files are used, per spec requirement.
 
-Create a `server_config.json`:
-
-```json
-{
-  "port": 8080,
-  "ample_time_seconds": 30,
-  "removal_timeout_seconds": 60,
-  "blinds": [2, 4],
-  "starting_stack_bb": 100
-}
-```
-
-Pass it with `--config server_config.json`.
+### Bot Configuration
 
 ### Bot Configuration
 

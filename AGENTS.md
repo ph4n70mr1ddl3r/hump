@@ -25,6 +25,7 @@ C++17: Follow standard conventions
 
 ## Recent Changes
 - 001-heads-up-nlhe-bots: Added C++17 + Boost.Beast (WebSocket/HTTP), nlohmann/json, Boost.Asio
+- 001-heads-up-nlhe-bots: Added C++17 + Boost.Beast (WebSocket/HTTP), nlohmann/json, Boost.Asio
 
 - 001-heads-up-nlhe-bots: Added C++17 + Boost.Beast (WebSocket/HTTP), nlohmann/json, Google Test
 

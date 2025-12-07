@@ -109,6 +109,81 @@
 - Conan: More powerful but steeper learning curve.
 - Manual Makefiles: Hard to maintain.
 
+## Command-line Arguments
+
+**Decision**: Server accepts three command-line arguments:
+- `--port <int>`: WebSocket server port (default: 8080)
+- `--ample-time <seconds>`: Time to wait for disconnected client before marking folded (default: 30)
+- `--removal-timeout <seconds>`: Time after which inactive client is removed (default: 60)
+
+**Rationale**: Follows spec requirement for configurable timeouts via command-line only. Simple, explicit, no configuration files. Using GNU long option style for clarity.
+
+**Alternatives considered**: Using configuration file (rejected due to spec), using environment variables (rejected for simplicity).
+
+## WebSocket Ping/Pong Interval
+
+**Decision**: Server sends ping every 30 seconds; client must respond within 10 seconds or be considered disconnected.
+
+**Rationale**: Standard WebSocket keepalive to detect stale connections. 30 seconds provides balance between network overhead and timely detection.
+
+**Alternatives considered**: No ping (rejected due to need for timeout detection), shorter interval (e.g., 5 seconds) rejected as unnecessary overhead.
+
+## Logging Library
+
+**Decision**: Use Boost.Log (part of Boost) for logging.
+
+**Rationale**: Already using Boost.Beast and Boost.Asio; adding Boost.Log maintains dependency consistency and provides structured logging with severity levels (debug/info/error) as required.
+
+**Alternatives considered**: spdlog (lightweight, header-only) rejected to avoid introducing another dependency; plain std::cout rejected due to lack of severity levels.
+
+## Linting/Formatting Standards
+
+**Decision**: Use clang-format with LLVM style; use clang-tidy for static analysis.
+
+**Rationale**: Widely adopted C++ tooling; LLVM style is readable and consistent. Ensures code quality as per constitution.
+
+**Alternatives considered**: Google style (similar, but LLVM more common), no linting (rejected).
+
+## Minimum Test Coverage Threshold
+
+**Decision**: Aim for 80% line coverage for unit tests, with integration tests covering all user scenarios.
+
+**Rationale**: Reasonable threshold for a server with critical game logic; ensures adequate testing while allowing for rapid iteration.
+
+**Alternatives considered**: 90% (too high for initial development), no threshold (rejected per constitution).
+
+## CLI Interface Consistency
+
+**Decision**: Follow GNU Coding Standards for command-line interface: long options with `--`, optional short options `-p`, `-a`, `-r`.
+
+**Rationale**: Provides familiar, consistent user experience; aligns with common Linux tooling.
+
+**Alternatives considered**: No short options (rejected for convenience), positional arguments (rejected for clarity).
+
+## Monitoring/Observability
+
+**Decision**: Console logging with debug/info/error levels; no external metrics collection initially.
+
+**Rationale**: Satisfies spec requirement for basic console logging; additional observability can be added later if needed.
+
+**Alternatives considered**: Prometheus metrics (overkill for single-table server), structured JSON logging (rejected for simplicity).
+
+## Card Representation
+
+**Decision**: Internal representation as integers 0-51 (rank * 4 + suit) for efficient shuffling and hand evaluation; JSON serialization as two‑character strings (rank + suit, e.g., "Ah").
+
+**Rationale**: Integer representation enables fast lookup for hand ranking (two‑plus‑two algorithm); string representation provides human‑readable messages over WebSocket.
+
+**Alternatives considered**: Struct with rank/suit (more memory), string-only representation (inefficient for evaluation), binary encoding (unnecessary complexity).
+
+## Hand Evaluation
+
+**Decision**: Use lookup table (two-plus-two algorithm) for fast hand ranking.
+
+**Rationale**: Industry standard for poker hand evaluation; provides O(1) performance.
+
+**Alternatives considered**: Brute-force evaluation (slow), external library (unnecessary dependency).
+
 ## Summary
 
-All “NEEDS CLARIFICATION” markers from the Technical Context are now resolved. The chosen technology stack is conservative, well‑supported, and aligns with the project’s simplicity requirements.
+All “NEEDS CLARIFICATION” markers from the Technical Context and Constitution Check are now resolved. The chosen technology stack is conservative, well‑supported, and aligns with the project’s simplicity requirements.

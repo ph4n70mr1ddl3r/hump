@@ -14,6 +14,10 @@
 - Q: How should the server handle crashes mid-hand? → A: Game resets on restart (no persistence).
 - Q: How should the server handle invalid bets (non-integer, negative, or exceeding stack)? → A: Exceeding stack treated as all-in; negative/invalid treated as check/fold.
 - Q: How should the server handle raise amounts that exceed opponent's stack? → A: Treat as all-in (opponent can call with remaining stack).
+- Q: What communication protocol should be used between server and clients? → A: WebSocket with JSON messages.
+- Q: What are the performance/latency targets for the server? → A: Sub-second latency, 100+ hands/hour.
+- Q: How does the system handle network latency and packet loss? → A: WebSocket ping/pong with timeout.
+- Q: What level of logging/observability is required? → A: Basic console logging (debug/info/error levels).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -70,7 +74,7 @@ As an operator, I want the server to handle client disconnections gracefully by 
 - What happens when both bots disconnect simultaneously?
 - Invalid bets: exceeding stack treated as all-in; negative/non-integer treated as check/fold.
 - Raise amounts exceeding opponent's stack are treated as all-in (opponent can call with remaining stack).
-- How does the system handle network latency and packet loss?
+- Network latency and packet loss: handled via WebSocket ping/pong with timeout.
 - Server crashes mid-hand result in game reset on restart (no persistence).
 - What if a bot tops up during a hand? (Should only happen between hands)
 - Tied hands (split pots) are handled by dividing pot equally among winners, with odd chips given to player in earliest position (button order).
@@ -92,6 +96,8 @@ As an operator, I want the server to handle client disconnections gracefully by 
 - **FR-011**: Server configuration (port, timeouts, etc.) MUST be provided via command-line arguments.
 - **FR-012**: Server MUST handle invalid bets appropriately: bets exceeding player's stack treated as all-in; negative or non-integer bets treated as check or fold.
 - **FR-013**: Server MUST handle raise amounts exceeding opponent's stack as all-in bets (opponent can call with remaining stack).
+- **FR-014**: Server MUST use WebSocket with JSON messages as defined in the WebSocket API contract.
+- **FR-015**: Server MUST provide basic console logging (debug/info/error levels) for operational visibility.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -120,3 +126,5 @@ As an operator, I want the server to handle client disconnections gracefully by 
 - **SC-005**: Bots exhibit random decision-making with realistic delays (0.5-3 seconds per action) across 95% of actions.
 - **SC-006**: Stack top-up automatically occurs when a bot's stack falls below 5BB, restoring it to 100BB between hands.
 - **SC-007**: Server handles invalid inputs and network errors gracefully without crashing or requiring restart.
+- **SC-008**: Server achieves sub-second latency for action processing and supports 100+ hands/hour throughput.
+- **SC-009**: Server provides basic console logging with debug/info/error levels for key operational events (connections, hand starts, errors).
