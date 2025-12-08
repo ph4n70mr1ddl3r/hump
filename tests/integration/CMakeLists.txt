@@ -24,3 +24,13 @@ gtest_discover_tests(disconnection_test)
 add_executable(stability_test stability_test.cpp)
 target_link_libraries(stability_test gtest_main core common client_lib server_lib Boost::system Boost::thread)
 gtest_discover_tests(stability_test)
+
+# chip_leak_test (SC-002)
+add_executable(chip_leak_test chip_leak_test.cpp)
+target_link_libraries(chip_leak_test gtest_main core common client_lib server_lib Boost::system Boost::thread)
+gtest_discover_tests(chip_leak_test)
+
+# performance_test (SC-008)
+add_executable(performance_test performance_test.cpp)
+target_link_libraries(performance_test gtest_main core common client_lib server_lib Boost::system Boost::thread)
+gtest_discover_tests(performance_test)

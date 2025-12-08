@@ -133,7 +133,9 @@
 - [X] T044 [P] Performance optimization across all stories (latency measurements)
 - [X] T045 [P] Additional unit tests for edge cases in tests/unit/edge_cases/ (see spec.md:58-66: simultaneous disconnection, invalid bets, raise exceeding stack, network latency, server crash, top-up during hand, split pots)
 - [X] T045b [P] Integration test for 100 consecutive hands stability (SC-001) in tests/integration/stability_test.cpp
+- [X] T048 [P] Integration test for chip‑leak validation (SC‑002) in tests/integration/chip_leak_test.cpp
 - [X] T046 Security hardening (input validation, message sanitization)
+- [X] T049 [P] Performance benchmark for latency/throughput (SC‑008) in tests/integration/performance_test.cpp
 - [ ] T047 Run quickstart.md validation end-to-end (cancelled due to time)
 
 ---
