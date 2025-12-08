@@ -1,0 +1,6 @@
+# Common unit tests
+
+# json_serialization_test
+add_executable(json_serialization_test json_serialization_test.cpp)
+target_link_libraries(json_serialization_test gtest_main common core nlohmann_json::nlohmann_json)
+gtest_discover_tests(json_serialization_test)

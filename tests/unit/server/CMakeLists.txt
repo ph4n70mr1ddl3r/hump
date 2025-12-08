@@ -1,0 +1,6 @@
+# Server unit tests
+
+# disconnection_timer_test
+add_executable(disconnection_timer_test disconnection_timer_test.cpp)
+target_link_libraries(disconnection_timer_test gtest_main server_lib common core)
+gtest_discover_tests(disconnection_timer_test)
