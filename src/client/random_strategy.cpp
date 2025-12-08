@@ -9,15 +9,15 @@ std::pair<std::string, int> RandomStrategy::chooseAction(
     int call_amount,
     int min_raise,
     int max_raise) {
-    
+
     if (possible_actions.empty()) {
         throw std::invalid_argument("possible_actions must not be empty");
     }
-    
+
     // Choose a random action from the list
     std::uniform_int_distribution<> action_dist(0, possible_actions.size() - 1);
     std::string action = possible_actions[action_dist(rng_)];
-    
+
     int amount = 0;
     if (action == "raise") {
         if (min_raise > max_raise) {
@@ -32,6 +32,6 @@ std::pair<std::string, int> RandomStrategy::chooseAction(
     } else {
         throw std::runtime_error("unknown action: " + action);
     }
-    
+
     return {action, amount};
 }

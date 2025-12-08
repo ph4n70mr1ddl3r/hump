@@ -72,7 +72,7 @@ bool TableManager::startHand() {
     if (table_.current_hand != nullptr) {
         return false; // hand already in progress
     }
-    
+
     // Create new hand
     Hand hand;
     hand.id = "hand_" + std::to_string(std::rand()); // TODO: UUID
@@ -91,23 +91,23 @@ bool TableManager::startHand() {
     hand.history.clear();
     hand.winners.clear();
     hand.completed_at = 0;
-    
+
     // Store hand in unique_ptr and set table reference
     this->current_hand_ = std::make_unique<Hand>(hand);
     table_.current_hand = this->current_hand_.get();
-    
+
     // Deal hole cards
     for (auto player : hand.players) {
         player->hole_cards.clear();
         player->hole_cards.push_back(hand.deck.deal());
         player->hole_cards.push_back(hand.deck.deal());
     }
-    
+
     // Update table state
     table_.state = TableState::HAND_IN_PROGRESS;
     table_.community_cards.clear();
     table_.pot = 0;
-    
+
     return true;
 }
 
@@ -116,25 +116,25 @@ void TableManager::endHand() {
         return;
     }
     Hand* hand = table_.current_hand;
-    
+
     // Determine winners
     std::vector<Player*> winners = poker::determineWinners(*hand);
     hand->winners = winners;
-    
+
     // Distribute pot (main pot and side pots)
     pot::distributePot(*hand, winners);
-    
+
     // Top up players if needed (between hands)
     for (auto& player : players_) {
         player->topUp();
     }
-    
+
     // Update table pot to zero (already zero after distribution)
     table_.pot = hand->pot;
-    
+
     // Set completion timestamp (placeholder)
     hand->completed_at = 1; // TODO: real timestamp
-    
+
     // Clear current hand
     current_hand_.reset();
     table_.current_hand = nullptr;
@@ -147,24 +147,24 @@ void TableManager::endHand() {
 bool TableManager::processPlayerAction(const std::string& player_id, const std::string& action, int amount) {
     Hand* hand = table_.current_hand;
     if (!hand) return false;
-    
+
     auto player = findPlayer(player_id);
     if (!player) return false;
-    
+
     // Validate and apply action using player_action module
     if (!player_action::validateAction(*hand, *player, action, amount))
     {
         return false;
     }
-    
+
     if (!player_action::applyAction(*hand, *player, action, amount))
     {
         return false;
     }
-    
+
     // Update table pot from hand pot
     table_.pot = hand->pot;
-    
+
     return true;
 }
 

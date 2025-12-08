@@ -48,6 +48,21 @@ void WebSocketSession::on_accept(beast::error_code ec)
     {
         game_session->sendWelcome(shared_from_this());
     }
+    // Set control callback to handle pong frames
+    ws_.control_callback(
+        [self = shared_from_this()](beast::websocket::frame_type kind, beast::string_view payload)
+        {
+            if (kind == beast::websocket::frame_type::pong)
+            {
+                // Cancel pong timeout timer
+                self->pong_timeout_timer_.cancel();
+                self->pong_pending_ = false;
+            }
+        });
+
+    // Start periodic ping timer
+    start_ping_timer();
+
     do_read();
 }
 
@@ -75,14 +90,14 @@ void WebSocketSession::on_read(beast::error_code ec, std::size_t bytes_transferr
         }
         return;
     }
-    
+
     // Forward message to game session
     if (auto game_session = game_session_.lock())
     {
         std::string message = beast::buffers_to_string(buffer_.data());
         game_session->handleMessage(message, shared_from_this());
     }
-    
+
     // Clear buffer and read next message
     buffer_.consume(buffer_.size());
     do_read();
@@ -106,10 +121,10 @@ void WebSocketSession::on_write(beast::error_code ec, std::size_t bytes_transfer
         std::cerr << "WebSocket write error: " << ec.message() << std::endl;
         return;
     }
-    
+
     // Remove the sent message from queue
     write_queue_.pop();
-    
+
     // If there are more messages, send next one
     if (!write_queue_.empty())
     {
@@ -119,4 +134,74 @@ void WebSocketSession::on_write(beast::error_code ec, std::size_t bytes_transfer
     {
         is_writing_ = false;
     }
+}
+
+void WebSocketSession::start_ping_timer()
+{
+    ping_timer_.expires_after(std::chrono::milliseconds(ping_interval_ms_));
+    ping_timer_.async_wait(
+        beast::bind_front_handler(
+            &WebSocketSession::on_ping_timer,
+            shared_from_this()));
+}
+
+void WebSocketSession::on_ping_timer(beast::error_code ec)
+{
+    if (ec)
+    {
+        // Timer cancelled
+        return;
+    }
+
+    // Start pong timeout timer
+    pong_pending_ = true;
+    pong_timeout_timer_.expires_after(std::chrono::milliseconds(pong_timeout_ms_));
+    pong_timeout_timer_.async_wait(
+        beast::bind_front_handler(
+            &WebSocketSession::on_pong_timeout,
+            shared_from_this()));
+
+    // Send ping
+    ws_.async_ping("",
+        beast::bind_front_handler(
+            &WebSocketSession::on_pong,
+            shared_from_this()));
+}
+
+void WebSocketSession::on_pong_timeout(beast::error_code ec)
+{
+    if (ec)
+    {
+        // Timer cancelled
+        return;
+    }
+
+    if (pong_pending_)
+    {
+        // Pong not received in time, treat as disconnect
+        if (auto game_session = game_session_.lock())
+        {
+            game_session->onDisconnect(shared_from_this());
+        }
+    }
+}
+
+void WebSocketSession::on_pong(beast::error_code ec)
+{
+    if (ec)
+    {
+        // Ping failed, treat as disconnect
+        if (auto game_session = game_session_.lock())
+        {
+            game_session->onDisconnect(shared_from_this());
+        }
+        return;
+    }
+
+    // Cancel pong timeout timer
+    pong_timeout_timer_.cancel();
+    pong_pending_ = false;
+
+    // Schedule next ping
+    start_ping_timer();
 }

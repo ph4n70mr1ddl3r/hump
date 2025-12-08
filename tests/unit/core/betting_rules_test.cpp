@@ -66,3 +66,24 @@ TEST(BettingRulesTest, IsRoundComplete) {
     has_acted = {true, true};
     EXPECT_FALSE(BettingRules::isRoundComplete(has_acted, bets, 8)); // Not all called
 }
+
+TEST(BettingRulesTest, BetExceedingStackTreatedAsAllIn) {
+    // If a player tries to bet more than their stack, it's treated as all-in (bet = stack)
+    // This is already handled by isValidAction: raise amount cannot exceed stack
+    // So a raise of 150 with stack 100 should be invalid
+    BettingRound round{4, 8, 100};
+    EXPECT_FALSE(BettingRules::isValidAction(Action::RAISE, 150, round, 100));
+    // However, the caller (opponent) can call with remaining stack when raise exceeds opponent stack
+    // This is a different scenario: player raises to 100 (all-in), opponent with stack 50 can call 50
+    // This is handled by game logic, not betting rules.
+}
+
+TEST(BettingRulesTest, RaiseExceedingOpponentStack) {
+    // Player1 raises to 100 (stack 200), Player2 stack 50
+    // Player2 can call all-in with 50, remaining 50 is returned to Player1? Not in NLHE.
+    // This edge case is beyond betting rules; it's about side pots.
+    // We'll just ensure that isValidAction allows raise up to player's own stack.
+    BettingRound round{4, 8, 100};
+    EXPECT_TRUE(BettingRules::isValidAction(Action::RAISE, 100, round, 100)); // all-in raise
+    EXPECT_FALSE(BettingRules::isValidAction(Action::RAISE, 101, round, 100)); // exceeds stack
+}

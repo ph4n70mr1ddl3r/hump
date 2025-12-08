@@ -9,7 +9,7 @@
 void to_json(nlohmann::json& j, const Card& card);
 void from_json(const nlohmann::json& j, Card& card);
 
-// HandRank serialization  
+// HandRank serialization
 void to_json(nlohmann::json& j, HandRank rank);
 void from_json(const nlohmann::json& j, HandRank& rank);
 

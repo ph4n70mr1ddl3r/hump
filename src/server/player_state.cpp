@@ -15,7 +15,7 @@ void PlayerStateManager::onDisconnect(Player& player)
     player.connection_status = ConnectionStatus::DISCONNECTED;
     player.disconnected_at = now();
     player.is_sitting_out = false; // not yet folded
-    
+
     // Start grace timer
     connection_manager_.startGraceTimer(player.id, grace_time_ms_,
         [this](const std::string& player_id) {
@@ -27,7 +27,7 @@ void PlayerStateManager::onReconnect(Player& player)
 {
     // Cancel any active timers
     connection_manager_.cancelTimers(player.id);
-    
+
     // Update player state
     player.connection_status = ConnectionStatus::CONNECTED;
     player.disconnected_at = std::nullopt;

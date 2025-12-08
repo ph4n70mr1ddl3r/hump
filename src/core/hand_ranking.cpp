@@ -1,6 +1,6 @@
 #include "hand_ranking.hpp"
 #include <algorithm>
-#include <map>
+#include <unordered_map>
 #include <stdexcept>
 
 // Forward declarations
@@ -27,7 +27,7 @@ std::vector<CardValue> toCardValues(const std::vector<Card>& cards) {
 bool isStraight(const std::vector<int>& ranks) {
     // Check for straight (Ace can be low for A-2-3-4-5)
     if (ranks.size() < 5) return false;
-    
+
     // Check normal straight
     for (size_t i = 0; i <= ranks.size() - 5; ++i) {
         bool straight = true;
@@ -39,7 +39,7 @@ bool isStraight(const std::vector<int>& ranks) {
         }
         if (straight) return true;
     }
-    
+
     // Check Ace-low straight (A, 2, 3, 4, 5)
     if (ranks[0] == 12) { // Ace
         std::vector<int> low_ranks = {12, 0, 1, 2, 3};
@@ -52,18 +52,18 @@ bool isStraight(const std::vector<int>& ranks) {
         }
         if (has_all) return true;
     }
-    
+
     return false;
 }
 
 bool isFlush(const std::vector<CardValue>& cards) {
     if (cards.size() < 5) return false;
-    
-    std::map<int, int> suit_count;
+
+    std::unordered_map<int, int> suit_count;
     for (const auto& card : cards) {
         suit_count[card.suit]++;
     }
-    
+
     for (const auto& [suit, count] : suit_count) {
         if (count >= 5) return true;
     }
@@ -74,22 +74,22 @@ HandRank evaluateFiveCards(const std::vector<CardValue>& cards) {
     if (cards.size() != 5) {
         throw std::invalid_argument("Need exactly 5 cards for evaluation");
     }
-    
+
     std::vector<int> ranks;
     for (const auto& card : cards) {
         ranks.push_back(card.rank);
     }
     std::sort(ranks.rbegin(), ranks.rend()); // Descending
-    
+
     // Count rank frequencies
-    std::map<int, int> rank_count;
+    std::unordered_map<int, int> rank_count;
     for (int rank : ranks) {
         rank_count[rank]++;
     }
-    
+
     bool is_flush = isFlush(cards);
     bool is_straight = isStraight(ranks);
-    
+
     // Check for straight flush / royal flush
     if (is_flush && is_straight) {
         // Check for Ace-high straight (royal flush)
@@ -98,12 +98,12 @@ HandRank evaluateFiveCards(const std::vector<CardValue>& cards) {
         }
         return HandRank::STRAIGHT_FLUSH;
     }
-    
+
     // Check four of a kind
     for (const auto& [rank, count] : rank_count) {
         if (count == 4) return HandRank::FOUR_OF_A_KIND;
     }
-    
+
     // Check full house
     bool has_three = false;
     bool has_pair = false;
@@ -112,11 +112,11 @@ HandRank evaluateFiveCards(const std::vector<CardValue>& cards) {
         if (count == 2) has_pair = true;
     }
     if (has_three && has_pair) return HandRank::FULL_HOUSE;
-    
+
     if (is_flush) return HandRank::FLUSH;
     if (is_straight) return HandRank::STRAIGHT;
     if (has_three) return HandRank::THREE_OF_A_KIND;
-    
+
     // Check two pair
     int pair_count = 0;
     for (const auto& [rank, count] : rank_count) {
@@ -124,7 +124,7 @@ HandRank evaluateFiveCards(const std::vector<CardValue>& cards) {
     }
     if (pair_count == 2) return HandRank::TWO_PAIR;
     if (pair_count == 1) return HandRank::ONE_PAIR;
-    
+
     return HandRank::HIGH_CARD;
 }
 
@@ -133,11 +133,11 @@ std::vector<std::vector<CardValue>> generateCombinations(const std::vector<CardV
     std::vector<std::vector<CardValue>> combos;
     int n = cards.size();
     int k = 5;
-    
+
     // Generate indices
     std::vector<int> indices(k);
     for (int i = 0; i < k; ++i) indices[i] = i;
-    
+
     while (true) {
         // Add current combination
         std::vector<CardValue> combo;
@@ -146,7 +146,7 @@ std::vector<std::vector<CardValue>> generateCombinations(const std::vector<CardV
             combo.push_back(cards[i]);
         }
         combos.push_back(std::move(combo));
-        
+
         // Next combination
         int i = k - 1;
         while (i >= 0 && indices[i] == n - k + i) {
@@ -158,7 +158,7 @@ std::vector<std::vector<CardValue>> generateCombinations(const std::vector<CardV
             indices[j] = indices[j - 1] + 1;
         }
     }
-    
+
     return combos;
 }
 
@@ -167,16 +167,16 @@ HandRank evaluateBestFiveCards(const std::vector<CardValue>& cards, std::vector<
     if (cards.size() < 5 || cards.size() > 7) {
         throw std::invalid_argument("Need 5-7 cards for evaluation");
     }
-    
+
     if (cards.size() == 5) {
         best_combo = cards;
         return evaluateFiveCards(cards);
     }
-    
+
     auto combos = generateCombinations(cards);
     HandRank best_rank = HandRank::HIGH_CARD;
     size_t best_index = 0;
-    
+
     for (size_t i = 0; i < combos.size(); ++i) {
         HandRank rank = evaluateFiveCards(combos[i]);
         if (rank > best_rank) {
@@ -198,7 +198,7 @@ HandRank evaluateBestFiveCards(const std::vector<CardValue>& cards, std::vector<
             // If keys are equal, keep first found (no change)
         }
     }
-    
+
     best_combo = std::move(combos[best_index]);
     return best_rank;
 }
@@ -211,20 +211,20 @@ std::vector<int> getComparisonKey(const std::vector<CardValue>& cards, HandRank 
         ranks.push_back(card.rank);
     }
     std::sort(ranks.rbegin(), ranks.rend());
-    
-    std::map<int, int> rank_count;
+
+    std::unordered_map<int, int> rank_count;
     for (int rank_val : ranks) {
         rank_count[rank_val]++;
     }
-    
+
     std::vector<int> key;
-    
+
     switch (rank) {
         case HandRank::HIGH_CARD:
             // Just sorted ranks
             key = ranks;
             break;
-            
+
         case HandRank::ONE_PAIR: {
             int pair_rank = -1;
             std::vector<int> kickers;
@@ -237,7 +237,7 @@ std::vector<int> getComparisonKey(const std::vector<CardValue>& cards, HandRank 
             key.insert(key.end(), kickers.begin(), kickers.end());
             break;
         }
-            
+
         case HandRank::TWO_PAIR: {
             std::vector<int> pairs;
             int kicker = -1;
@@ -251,7 +251,7 @@ std::vector<int> getComparisonKey(const std::vector<CardValue>& cards, HandRank 
             key.push_back(kicker);
             break;
         }
-            
+
         case HandRank::THREE_OF_A_KIND: {
             int trips_rank = -1;
             std::vector<int> kickers;
@@ -264,7 +264,7 @@ std::vector<int> getComparisonKey(const std::vector<CardValue>& cards, HandRank 
             key.insert(key.end(), kickers.begin(), kickers.end());
             break;
         }
-            
+
         case HandRank::STRAIGHT:
         case HandRank::FLUSH:
         case HandRank::STRAIGHT_FLUSH:
@@ -290,7 +290,7 @@ std::vector<int> getComparisonKey(const std::vector<CardValue>& cards, HandRank 
             }
             break;
         }
-            
+
         case HandRank::FULL_HOUSE: {
             int trips_rank = -1;
             int pair_rank = -1;
@@ -302,7 +302,7 @@ std::vector<int> getComparisonKey(const std::vector<CardValue>& cards, HandRank 
             key.push_back(pair_rank);
             break;
         }
-            
+
         case HandRank::FOUR_OF_A_KIND: {
             int quad_rank = -1;
             int kicker = -1;
@@ -315,7 +315,7 @@ std::vector<int> getComparisonKey(const std::vector<CardValue>& cards, HandRank 
             break;
         }
     }
-    
+
     return key;
 }
 
@@ -323,23 +323,23 @@ HandRank HandRanking::evaluate(const std::vector<Card>& cards) {
     if (cards.size() < 5 || cards.size() > 7) {
         throw std::invalid_argument("Hand evaluation requires 5-7 cards");
     }
-    
+
     auto card_values = toCardValues(cards);
-    
+
     // For 5 cards, evaluate directly
     if (cards.size() == 5) {
         return evaluateFiveCards(card_values);
     }
-    
+
     // For 6 or 7 cards, evaluate all 5-card combinations and pick best
     int n = card_values.size();
     int k = 5;
     HandRank best_rank = HandRank::HIGH_CARD;
-    
+
     // Generate all combinations of indices
     std::vector<int> indices(k);
     for (int i = 0; i < k; ++i) indices[i] = i;
-    
+
     while (true) {
         // Build current combination
         std::vector<CardValue> combo;
@@ -347,14 +347,14 @@ HandRank HandRanking::evaluate(const std::vector<Card>& cards) {
         for (int i : indices) {
             combo.push_back(card_values[i]);
         }
-        
+
         HandRank rank = evaluateFiveCards(combo);
         if (rank > best_rank) {
             best_rank = rank;
         }
         // Note: for ties (same rank), we'd need to compare kickers
         // but for evaluation alone, any hand with same rank is equivalent
-        
+
         // Next combination
         int i = k - 1;
         while (i >= 0 && indices[i] == n - k + i) {
@@ -366,7 +366,7 @@ HandRank HandRanking::evaluate(const std::vector<Card>& cards) {
             indices[j] = indices[j - 1] + 1;
         }
     }
-    
+
     return best_rank;
 }
 
@@ -389,25 +389,25 @@ std::string HandRanking::rankToString(HandRank rank) {
 int HandRanking::compare(const std::vector<Card>& hand1, const std::vector<Card>& hand2) {
     auto cards1 = toCardValues(hand1);
     auto cards2 = toCardValues(hand2);
-    
+
     std::vector<CardValue> best_combo1, best_combo2;
     HandRank rank1 = evaluateBestFiveCards(cards1, best_combo1);
     HandRank rank2 = evaluateBestFiveCards(cards2, best_combo2);
-    
+
     if (rank1 != rank2) {
         return static_cast<int>(rank1) - static_cast<int>(rank2);
     }
-    
+
     std::vector<int> key1 = getComparisonKey(best_combo1, rank1);
     std::vector<int> key2 = getComparisonKey(best_combo2, rank2);
-    
+
     // Lexicographic comparison
     for (size_t i = 0; i < std::min(key1.size(), key2.size()); ++i) {
         if (key1[i] != key2[i]) {
             return key1[i] - key2[i];
         }
     }
-    
+
     // All compared elements equal
     return 0;
 }

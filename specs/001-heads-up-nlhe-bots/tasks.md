@@ -116,9 +116,9 @@
 ### Implementation for User Story 3
 
 - [X] T038 [P] [US3] Implement disconnection detection and grace timer in src/server/connection_manager.cpp and src/server/connection_manager.hpp
-- [ ] T039 [P] [US3] Implement player state management for disconnected/reconnecting players in src/server/player_state.cpp and src/server/player_state.hpp
+- [X] T039 [P] [US3] Implement player state management for disconnected/reconnecting players in src/server/player_state.cpp and src/server/player_state.hpp
 - [X] T040 [US3] Implement removal timeout logic (remove inactive players) in src/server/player_removal.cpp and src/server/player_removal.hpp
-- [ ] T041 [US3] Implement WebSocket ping/pong keep-alive and timeout handling in src/server/websocket_session.cpp
+- [X] T041 [US3] Implement WebSocket ping/pong keep-alive and timeout handling in src/server/websocket_session.cpp
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -128,13 +128,13 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T042 [P] Documentation updates in README.md and quickstart.md validation
-- [ ] T043 [P] Code cleanup and refactoring (ensure consistent style)
-- [ ] T044 [P] Performance optimization across all stories (latency measurements)
-- [ ] T045 [P] Additional unit tests for edge cases in tests/unit/edge_cases/ (see spec.md:58-66: simultaneous disconnection, invalid bets, raise exceeding stack, network latency, server crash, top-up during hand, split pots)
-- [ ] T045b [P] Integration test for 100 consecutive hands stability (SC-001) in tests/integration/stability_test.cpp
-- [ ] T046 Security hardening (input validation, message sanitization)
-- [ ] T047 Run quickstart.md validation end-to-end
+- [X] T042 [P] Documentation updates in README.md and quickstart.md validation
+- [X] T043 [P] Code cleanup and refactoring (ensure consistent style)
+- [X] T044 [P] Performance optimization across all stories (latency measurements)
+- [X] T045 [P] Additional unit tests for edge cases in tests/unit/edge_cases/ (see spec.md:58-66: simultaneous disconnection, invalid bets, raise exceeding stack, network latency, server crash, top-up during hand, split pots)
+- [X] T045b [P] Integration test for 100 consecutive hands stability (SC-001) in tests/integration/stability_test.cpp
+- [X] T046 Security hardening (input validation, message sanitization)
+- [ ] T047 Run quickstart.md validation end-to-end (cancelled due to time)
 
 ---
 

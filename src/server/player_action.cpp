@@ -11,21 +11,21 @@ bool validateAction(const Hand& hand, const Player& player, const std::string& a
         return false;
     }
     if (amount < 0) return false;
-    
+
     // Check player has enough stack for call/raise
     if (action == "call" || action == "raise") {
         if (amount > player.stack) {
             return false;
         }
     }
-    
+
     // Raise must be at least min raise
     if (action == "raise") {
         if (amount < hand.min_raise) {
             return false;
         }
     }
-    
+
     // Player must be current player to act (simplified)
     // TODO: compare player pointer with hand.current_player_to_act
     return true;
@@ -35,7 +35,7 @@ bool applyAction(Hand& hand, Player& player, const std::string& action, int amou
     if (!validateAction(hand, player, action, amount)) {
         return false;
     }
-    
+
     if (action == "fold") {
         // Mark player folded (remove from active players)
         // For now, do nothing
@@ -47,7 +47,7 @@ bool applyAction(Hand& hand, Player& player, const std::string& action, int amou
         hand.pot += amount;
         hand.min_raise = amount; // simplistic update
     }
-    
+
     // Update player's total bet amount
     if (action != "fold") {
         // Find player index
@@ -66,7 +66,7 @@ bool applyAction(Hand& hand, Player& player, const std::string& action, int amou
             hand.player_bets[player_index] += amount;
         }
     }
-    
+
     // Record action history
     ActionHistory history_entry;
     history_entry.player = &player;
@@ -74,12 +74,12 @@ bool applyAction(Hand& hand, Player& player, const std::string& action, int amou
     history_entry.amount = amount;
     history_entry.timestamp = 0; // TODO
     hand.history.push_back(history_entry);
-    
+
     // Advance current player (simplified)
     if (hand.players.size() == 2) {
         hand.current_player_to_act = (hand.current_player_to_act == hand.players[0]) ? hand.players[1] : hand.players[0];
     }
-    
+
     return true;
 }
 

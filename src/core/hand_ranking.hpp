@@ -21,7 +21,7 @@ class HandRanking {
 public:
     static HandRank evaluate(const std::vector<Card>& cards);
     static std::string rankToString(HandRank rank);
-    
+
     // For comparing two hands of same rank
     static int compare(const std::vector<Card>& hand1, const std::vector<Card>& hand2);
 };

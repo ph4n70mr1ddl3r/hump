@@ -19,3 +19,8 @@ gtest_discover_tests(bot_behavior_test)
 add_executable(disconnection_test disconnection_test.cpp)
 target_link_libraries(disconnection_test gtest_main core common server_lib Boost::system Boost::thread)
 gtest_discover_tests(disconnection_test)
+
+# stability_test (SC-001)
+add_executable(stability_test stability_test.cpp)
+target_link_libraries(stability_test gtest_main core common client_lib server_lib Boost::system Boost::thread)
+gtest_discover_tests(stability_test)

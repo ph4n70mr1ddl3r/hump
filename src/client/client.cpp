@@ -28,32 +28,32 @@ void Client::run()
         net::io_context ioc;
         tcp::resolver resolver(ioc);
         auto endpoints = resolver.resolve(host_, port_);
-        
+
         websocket::stream<tcp::socket> ws(ioc);
         net::connect(ws.next_layer(), endpoints);
-        
+
         ws.handshake(host_, "/");
-        
+
         std::cout << "Connected to server at " << host_ << ":" << port_ << std::endl;
-        
+
         beast::flat_buffer buffer;
-        
+
         // Receive welcome message
         ws.read(buffer);
         std::string welcome_msg = beast::buffers_to_string(buffer.data());
         buffer.consume(buffer.size());
-        
+
         nlohmann::json welcome_json = nlohmann::json::parse(welcome_msg);
         if (welcome_json.at("type") != "welcome")
         {
             std::cerr << "Expected welcome message, got: " << welcome_msg << std::endl;
             return;
         }
-        
+
         std::string player_id = welcome_json.at("payload").at("player_id").get<std::string>();
         player_id_ = player_id;
         std::cout << "Assigned player ID: " << player_id << std::endl;
-        
+
         // Send join message
         nlohmann::json join_msg = {
             {"type", "join"},
@@ -62,32 +62,32 @@ void Client::run()
             }}
         };
         ws.write(net::buffer(join_msg.dump()));
-        
+
         // Receive join acknowledgment
         ws.read(buffer);
         std::string join_ack_msg = beast::buffers_to_string(buffer.data());
         buffer.consume(buffer.size());
-        
+
         nlohmann::json join_ack_json = nlohmann::json::parse(join_ack_msg);
         if (join_ack_json.at("type") != "join_ack")
         {
             std::cerr << "Expected join_ack, got: " << join_ack_msg << std::endl;
             return;
         }
-        
+
         int seat = join_ack_json.at("payload").at("seat").get<int>();
         std::cout << "Joined table at seat " << seat << std::endl;
-        
+
         // Main message loop
         while (ws.is_open())
         {
             ws.read(buffer);
             std::string msg = beast::buffers_to_string(buffer.data());
             buffer.consume(buffer.size());
-            
+
             nlohmann::json json = nlohmann::json::parse(msg);
             std::string type = json.at("type").get<std::string>();
-            
+
             if (type == "hand_started")
             {
                 std::cout << "Hand started" << std::endl;
@@ -100,20 +100,20 @@ void Client::run()
                 int call_amount = json.at("payload").at("call_amount").get<int>();
                 int min_raise = json.at("payload").at("min_raise").get<int>();
                 int max_raise = json.at("payload").at("max_raise").get<int>();
-                
+
                 // Convert possible actions JSON array to vector<string>
                 std::vector<std::string> actions;
                 for (const auto& action : possible_actions) {
                     actions.push_back(action.get<std::string>());
                 }
-                
+
                 // Use random strategy to choose action
                 RandomStrategy strategy;
                 auto [action, amount] = strategy.chooseAction(actions, call_amount, min_raise, max_raise);
-                
+
                 // Add human-like delay before responding
                 delay::randomDelay();
-                
+
                 nlohmann::json action_msg = {
                     {"type", "action"},
                     {"payload", {
@@ -165,7 +165,7 @@ void Client::run()
                 std::cout << "Unknown message type: " << type << std::endl;
             }
         }
-        
+
         ws.close(websocket::close_code::normal);
     }
     catch (const std::exception& e)

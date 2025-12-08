@@ -10,7 +10,7 @@ int main(int argc, char** argv) {
     std::string host = argv[1];
     std::string port = argv[2];
     std::string name = (argc >= 4) ? argv[3] : "Bot";
-    
+
     Client client(host, port, name);
     client.run();
     return 0;

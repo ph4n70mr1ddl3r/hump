@@ -16,7 +16,7 @@ void ConnectionManager::startGraceTimer(const std::string& player_id, int grace_
     {
         timers.grace_timer->cancel();
     }
-    
+
     timers.grace_timer->expires_after(std::chrono::milliseconds(grace_time_ms));
     timers.grace_timer->async_wait([this, player_id, on_expiry](const boost::system::error_code& ec) {
         if (!ec)
@@ -48,7 +48,7 @@ void ConnectionManager::startRemovalTimer(const std::string& player_id, int remo
     {
         timers.removal_timer->cancel();
     }
-    
+
     timers.removal_timer->expires_after(std::chrono::milliseconds(removal_time_ms));
     timers.removal_timer->async_wait([this, player_id, on_expiry](const boost::system::error_code& ec) {
         if (!ec)

@@ -26,7 +26,7 @@ void startHand(Hand& hand, Deck& deck, Player* dealer, Player* small_blind, Play
     hand.history.clear();
     hand.winners.clear();
     hand.completed_at = 0;
-    
+
     // Deal hole cards
     dealHoleCards(hand, hand.deck);
 }
@@ -85,7 +85,7 @@ bool applyAction(Hand& hand, Player* player, const std::string& action, int amou
     } else {
         return false;
     }
-    
+
     // Record action history
     ActionHistory history_entry;
     history_entry.player = player;
@@ -93,13 +93,13 @@ bool applyAction(Hand& hand, Player* player, const std::string& action, int amou
     history_entry.amount = amount;
     history_entry.timestamp = 0; // TODO: get current time
     hand.history.push_back(history_entry);
-    
+
     // Move to next player (simplified)
     // In heads-up, toggle between two players
     if (hand.players.size() == 2) {
         hand.current_player_to_act = (hand.current_player_to_act == hand.players[0]) ? hand.players[1] : hand.players[0];
     }
-    
+
     return true;
 }
 
@@ -141,7 +141,7 @@ bool isHandComplete(const Hand& hand) {
 std::vector<Player*> determineWinners(const Hand& hand) {
     std::vector<Player*> winners;
     if (hand.players.empty()) return winners;
-    
+
     // Count active (non-folded) players
     std::vector<Player*> active_players;
     for (size_t i = 0; i < hand.players.size(); ++i) {
@@ -149,13 +149,13 @@ std::vector<Player*> determineWinners(const Hand& hand) {
             active_players.push_back(hand.players[i]);
         }
     }
-    
+
     // If only one active player, they win
     if (active_players.size() == 1) {
         winners.push_back(active_players[0]);
         return winners;
     }
-    
+
     // Evaluate each active player's hand (hole cards + community cards)
     std::vector<std::pair<Player*, HandRank>> evaluations;
     for (auto player : active_players) {
@@ -165,7 +165,7 @@ std::vector<Player*> determineWinners(const Hand& hand) {
         HandRank rank = HandRanking::evaluate(all_cards);
         evaluations.emplace_back(player, rank);
     }
-    
+
     // Find max rank
     auto max_it = std::max_element(evaluations.begin(), evaluations.end(),
         [](const auto& a, const auto& b) { return a.second < b.second; });

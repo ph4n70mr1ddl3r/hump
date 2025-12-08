@@ -71,7 +71,7 @@ Card::Card(const std::string& str) {
     if (str.length() != 2) {
         throw std::invalid_argument("Card string must be 2 characters");
     }
-    
+
     Rank rank = charToRank(str[0]);
     Suit suit = charToSuit(str[1]);
     value_ = static_cast<uint8_t>(rank) * NUM_SUITS + static_cast<uint8_t>(suit);
