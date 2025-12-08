@@ -136,7 +136,7 @@
 - [X] T048 [P] Integration test for chip‑leak validation (SC‑002) in tests/integration/chip_leak_test.cpp
 - [X] T046 Security hardening (input validation, message sanitization)
 - [X] T049 [P] Performance benchmark for latency/throughput (SC‑008) in tests/integration/performance_test.cpp
-- [ ] T047 Run quickstart.md validation end-to-end (cancelled due to time)
+- [X] T047 Run quickstart.md validation end-to-end (completed)
 
 ---
 

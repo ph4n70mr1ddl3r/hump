@@ -52,12 +52,13 @@ The server will wait for two clients to connect.
 ## Running the Client (Bot)
 
 ```bash
-./client/poker_bot --server ws://localhost:8080 --name RandomBot
+./client/poker_bot localhost 8080 RandomBot
 ```
 
 Options:
-- `--server`: WebSocket URL of the server
-- `--name`: display name (optional)
+- `host`: server hostname (default: localhost)
+- `port`: server port (default: 8080)
+- `name`: display name (optional)
 
 Run two instances (in separate terminals) to start a heads‑up game.
 
