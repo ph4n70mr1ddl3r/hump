@@ -1,7 +1,7 @@
 #include "betting_rules.hpp"
 #include <algorithm>
 
-bool BettingRules::isValidAction(Action action, int amount, const BettingRound& round, int player_stack) {
+bool BettingRules::isValidAction(Action action, int amount, const BettingState& round, int player_stack) {
     switch (action) {
         case Action::FOLD:
             return amount == 0;
@@ -25,8 +25,8 @@ int BettingRules::calculateMaxRaise(int player_stack) {
     return player_stack;
 }
 
-BettingRound BettingRules::applyAction(Action action, int amount, const BettingRound& round, int player_stack) {
-    BettingRound new_round = round;
+BettingState BettingRules::applyAction(Action action, int amount, const BettingState& round, int player_stack) {
+    BettingState new_round = round;
     switch (action) {
         case Action::FOLD:
             // No change to pot or bets

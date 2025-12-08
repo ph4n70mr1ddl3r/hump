@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <optional>
+#include <algorithm>
 #include "core/hand.hpp"
 #include "core/deck.hpp"
 #include "core/models/player.hpp"
@@ -47,6 +48,21 @@ TEST_F(StabilityTest, OneHundredConsecutiveHands) {
             // Determine active player (simplified: assume hand.current_player_index)
             Player* active_player = hand.players[hand.current_player_index];
             
+            // Find active player index and compute betting amounts
+            int active_player_index = -1;
+            for (size_t i = 0; i < hand.players.size(); ++i) {
+                if (hand.players[i] == active_player) {
+                    active_player_index = i;
+                    break;
+                }
+            }
+            int player_bet = (active_player_index >= 0 && active_player_index < hand.player_bets.size()) 
+                ? hand.player_bets[active_player_index] : 0;
+            int current_bet = 0;
+            for (int bet : hand.player_bets) {
+                if (bet > current_bet) current_bet = bet;
+            }
+            
             // Generate random valid action
             std::vector<std::string> possible_actions = {"fold", "call", "raise"};
             std::uniform_int_distribution<int> action_dist(0, possible_actions.size() - 1);
@@ -54,21 +70,21 @@ TEST_F(StabilityTest, OneHundredConsecutiveHands) {
             
             int amount = 0;
             if (action == "call") {
-                amount = hand.current_bet - active_player->current_bet;
+                amount = current_bet - player_bet;
                 if (amount > active_player->stack) {
                     amount = active_player->stack; // all-in
                 }
             } else if (action == "raise") {
                 // Random raise between min raise and player's stack
-                int min_raise = BettingRules::calculateMinRaise(hand.current_bet, hand.big_blind);
+                int min_raise = BettingRules::calculateMinRaise(current_bet, 4); // big blind = 4
                 if (min_raise <= active_player->stack) {
                     std::uniform_int_distribution<int> raise_dist(min_raise, active_player->stack);
                     amount = raise_dist(rng);
                 } else {
                     // Cannot raise, fall back to call or fold
-                    if (hand.current_bet - active_player->current_bet <= active_player->stack) {
+                    if (current_bet - player_bet <= active_player->stack) {
                         action = "call";
-                        amount = hand.current_bet - active_player->current_bet;
+                        amount = current_bet - player_bet;
                     } else {
                         action = "fold";
                         amount = 0;
