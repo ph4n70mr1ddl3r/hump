@@ -1,4 +1,5 @@
 # Build directories
+build_check/
 build/
 bin/
 obj/
