@@ -205,7 +205,7 @@ void resetHand(Hand& hand) {
     hand.folded.clear();
     hand.current_betting_round = BettingRound::PREFLOP;
     hand.current_player_to_act = nullptr;
-    hand.min_raise = 4;
+    hand.min_raise = common::constants::BIG_BLIND;
     hand.history.clear();
     hand.winners.clear();
     hand.completed_at = 0;

@@ -657,6 +657,10 @@ void GameSession::handleAction(const nlohmann::json& payload, std::shared_ptr<We
 
 void GameSession::handlePing(const nlohmann::json& payload, std::shared_ptr<WebSocketSession> session)
 {
+    if (!session) {
+        common::log::log(common::log::Level::ERROR, "handlePing: null session");
+        return;
+    }
     nlohmann::json pong = {
         {"type", "pong"},
         {"payload", {}}
@@ -707,6 +711,10 @@ void GameSession::handleTopUp(const nlohmann::json& payload, std::shared_ptr<Web
 
 void GameSession::sendJson(std::shared_ptr<WebSocketSession> session, const nlohmann::json& json)
 {
+    if (!session) {
+        common::log::log(common::log::Level::ERROR, "sendJson: null session");
+        return;
+    }
     session->send(json.dump());
 }
 

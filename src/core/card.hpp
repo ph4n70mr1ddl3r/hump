@@ -28,7 +28,7 @@ enum class Suit {
 
 class Card {
 public:
-    Card() = default;
+    Card() : value_(0) {}
     Card(const std::string& str);
     Card(Rank rank, Suit suit);
 

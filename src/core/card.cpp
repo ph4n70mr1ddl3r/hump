@@ -7,7 +7,7 @@ namespace {
 constexpr std::size_t NUM_RANKS = 13;
 constexpr std::size_t NUM_SUITS = 4;
 
-char rankToChar(Rank rank) {
+constexpr char rankToChar(Rank rank) noexcept {
     switch (rank) {
         case Rank::TWO: return '2';
         case Rank::THREE: return '3';
@@ -45,7 +45,7 @@ Rank charToRank(char c) {
     }
 }
 
-char suitToChar(Suit suit) {
+constexpr char suitToChar(Suit suit) noexcept {
     switch (suit) {
         case Suit::CLUBS: return 'c';
         case Suit::DIAMONDS: return 'd';

@@ -16,6 +16,9 @@ WebSocketSession::~WebSocketSession()
     boost::system::error_code ec;
     ping_timer_.cancel(ec);
     pong_timeout_timer_.cancel(ec);
+    if (ec && ec != boost::system::errc::operation_not_permitted) {
+        common::log::log(common::log::Level::WARN, "WebSocketSession destructor: timer cancel error: " + ec.message());
+    }
 }
 
 void WebSocketSession::setGameSession(std::shared_ptr<GameSession> game_session)
