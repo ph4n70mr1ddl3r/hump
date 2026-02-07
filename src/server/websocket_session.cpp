@@ -16,7 +16,7 @@ WebSocketSession::~WebSocketSession()
     boost::system::error_code ec;
     ping_timer_.cancel(ec);
     pong_timeout_timer_.cancel(ec);
-    if (ec && ec != boost::system::errc::operation_not_permitted) {
+    if (ec && ec != boost::system::errc::operation_not_permitted && ec != boost::asio::error::operation_aborted) {
         common::log::log(common::log::Level::WARN, "WebSocketSession destructor: timer cancel error: " + ec.message());
     }
 }
@@ -69,8 +69,11 @@ void WebSocketSession::on_accept(beast::error_code ec)
         {
             if (kind == beast::websocket::frame_type::pong)
             {
-                // Cancel pong timeout timer
-                self->pong_timeout_timer_.cancel();
+                boost::system::error_code ec;
+                self->pong_timeout_timer_.cancel(ec);
+                if (ec && ec != boost::asio::error::operation_aborted) {
+                    common::log::log(common::log::Level::WARN, "Pong timeout timer cancel error: " + ec.message());
+                }
                 self->pong_pending_ = false;
             }
         });

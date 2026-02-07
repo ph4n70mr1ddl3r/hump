@@ -26,6 +26,7 @@ GameSession::GameSession(boost::asio::io_context& ioc, int action_timeout_ms, in
 
 nlohmann::json GameSession::createErrorResponse(const std::string& code, const std::string& message) const
 {
+    common::log::log(common::log::Level::WARN, "Error response: " + code + " - " + message);
     return {
         {"type", "error"},
         {"payload", {
@@ -177,11 +178,11 @@ void GameSession::sendActionRequest(const std::string& player_id)
     auto player = table_manager_.getPlayer(player_id);
     if (!player) return;
 
-    // Determine possible actions (simplified)
+    // Determine possible actions (simplified - should check actual betting state)
     nlohmann::json possible_actions = nlohmann::json::array({"fold", "call", "raise"});
 
     // Calculate call amount (amount needed to call current bet)
-    // In a real implementation, this would be based on the highest bet in the current round
+    // TODO: Implement proper betting round state tracking for accurate call/raise amounts
     int call_amount = common::constants::BIG_BLIND;
 
     // Get min raise from hand

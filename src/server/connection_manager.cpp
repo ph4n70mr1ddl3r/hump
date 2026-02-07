@@ -45,9 +45,9 @@ void ConnectionManager::startRemovalTimer(const std::string& player_id, int remo
         if (!ec)
         {
             on_expiry(player_id);
-            std::lock_guard<std::mutex> lock(timers_mutex_);
-            timers_.erase(player_id);
         }
+        std::lock_guard<std::mutex> lock(timers_mutex_);
+        timers_.erase(player_id);
     });
 }
 

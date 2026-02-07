@@ -86,7 +86,12 @@ bool applyAction(Hand& hand, Player& player, const std::string& action, int amou
     history_entry.timestamp = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     hand.history.push_back(history_entry);
 
-    // Advance current player (simplified)
+    // Advance current player (simplified - heads-up only, doesn't account for folded players or round transitions)
+    // In a full NLHE implementation, this would:
+    // 1. Skip folded players
+    // 2. Check if betting round is complete
+    // 3. Handle big blind preflop special case
+    // 4. Rotate to next active player considering all betting rules
     if (hand.players.size() == 2) {
         hand.current_player_to_act = (hand.current_player_to_act == hand.players[0]) ? hand.players[1] : hand.players[0];
     }

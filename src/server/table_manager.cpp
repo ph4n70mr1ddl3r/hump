@@ -81,8 +81,8 @@ bool TableManager::startHand() {
     hand.id = "hand_" + common::uuid::generate();
     hand.table = &table_;
     hand.players = {table_.seat_1, table_.seat_2};
-    hand.deck = Deck();
-    hand.deck.shuffle();
+    hand.deck = Deck(); // Default constructor creates standard deck
+    hand.deck.shuffle(); // Shuffle the deck
     hand.community_cards.clear();
     hand.pot = 0;
     hand.side_pots.clear();
@@ -133,7 +133,10 @@ void TableManager::endHand() {
     }
 
     // Update table pot (should be zero after distribution)
-    table_.pot = hand->pot;
+    if (hand->pot != 0) {
+        common::log::log(common::log::Level::WARN, "Pot not fully distributed after hand end: " + std::to_string(hand->pot));
+    }
+    table_.pot = 0;
 
     // Set completion timestamp
     hand->completed_at = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());

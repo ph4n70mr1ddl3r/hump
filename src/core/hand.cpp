@@ -198,6 +198,7 @@ void resetHand(Hand& hand) {
     hand.table = nullptr;
     hand.players.clear();
     hand.deck = Deck();
+    hand.deck.shuffle();
     hand.community_cards.clear();
     hand.pot = 0;
     hand.side_pots.clear();
