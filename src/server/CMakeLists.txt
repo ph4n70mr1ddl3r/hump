@@ -6,7 +6,6 @@ add_library(server_lib STATIC
     game_session.cpp
     connection_manager.cpp
     player_state.cpp
-    player_removal.cpp
     websocket_session.cpp
 )
 

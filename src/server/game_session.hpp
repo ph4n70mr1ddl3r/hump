@@ -68,7 +68,7 @@ private:
     // Handle specific message types
     void handleJoin(const nlohmann::json& payload, std::shared_ptr<WebSocketSession> session);
     void handleAction(const nlohmann::json& payload, std::shared_ptr<WebSocketSession> session);
-    void handlePing(const nlohmann::json& payload, std::shared_ptr<WebSocketSession> session);
+    void handlePing(std::shared_ptr<WebSocketSession> session);
     void handleTopUp(const nlohmann::json& payload, std::shared_ptr<WebSocketSession> session);
 
     // Send JSON message to a session

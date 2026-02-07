@@ -6,11 +6,13 @@
 namespace common {
 namespace uuid {
 
-std::string generate() {
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    static std::uniform_int_distribution<uint32_t> dis(0, 0xFFFFFFFF);
+namespace {
+    thread_local std::random_device rd;
+    thread_local std::mt19937 gen(rd());
+    thread_local std::uniform_int_distribution<uint32_t> dis(0, 0xFFFFFFFF);
+}
 
+std::string generate() {
     std::stringstream ss;
     ss << std::hex << std::setfill('0');
     ss << std::setw(8) << dis(gen);

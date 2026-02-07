@@ -23,9 +23,11 @@ struct SidePot {
 
 struct Table {
     std::string id; // UUID
+    // Raw pointers are non-owning references to players managed by TableManager
+    // These pointers are guaranteed to be valid while the player is seated
     Player* seat_1; // reference to Player in seat 1 (button)
     Player* seat_2; // reference to Player in seat 2 (big blind)
-    Hand* current_hand; // nullable
+    Hand* current_hand; // nullable, owned by TableManager as unique_ptr
     int pot; // total chips in main pot
     std::vector<SidePot> side_pots;
     std::vector<Card> community_cards; // 0-5 cards

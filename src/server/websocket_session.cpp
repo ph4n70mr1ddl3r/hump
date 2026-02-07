@@ -43,7 +43,10 @@ void WebSocketSession::send(const std::string& message)
     net::post(ws_.get_executor(),
         [self = shared_from_this(), message]()
         {
-            self->write_queue_.push(message);
+            {
+                std::lock_guard<std::mutex> lock(self->write_queue_mutex_);
+                self->write_queue_.push(message);
+            }
             if (!self->is_writing_)
             {
                 self->do_write();
@@ -130,8 +133,13 @@ void WebSocketSession::do_write()
 {
     is_writing_ = true;
     ws_.text(true);
+    std::string message;
+    {
+        std::lock_guard<std::mutex> lock(write_queue_mutex_);
+        message = write_queue_.front();
+    }
     ws_.async_write(
-        net::buffer(write_queue_.front()),
+        net::buffer(message),
         beast::bind_front_handler(
             &WebSocketSession::on_write,
             shared_from_this()));
@@ -142,21 +150,22 @@ void WebSocketSession::on_write(beast::error_code ec, std::size_t bytes_transfer
     if (ec)
     {
         common::log::log(common::log::Level::ERROR, "WebSocket write error: " + ec.message());
+        is_writing_ = false;
         return;
     }
 
-    // Remove the sent message from queue
-    write_queue_.pop();
+    {
+        std::lock_guard<std::mutex> lock(write_queue_mutex_);
+        write_queue_.pop();
 
-    // If there are more messages, send next one
-    if (!write_queue_.empty())
-    {
-        do_write();
+        // If there are more messages, send next one
+        if (!write_queue_.empty())
+        {
+            do_write();
+            return;
+        }
     }
-    else
-    {
-        is_writing_ = false;
-    }
+    is_writing_ = false;
 }
 
 void WebSocketSession::start_ping_timer()

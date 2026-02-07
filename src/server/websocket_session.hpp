@@ -6,6 +6,7 @@
 #include <memory>
 #include <queue>
 #include <atomic>
+#include <mutex>
 #include "../common/constants.hpp"
 
 namespace beast = boost::beast;
@@ -44,6 +45,7 @@ private:
     beast::flat_buffer buffer_;
     std::weak_ptr<GameSession> game_session_;
     std::queue<std::string> write_queue_;
+    std::mutex write_queue_mutex_;
     std::atomic<bool> is_writing_{false};
 
     // Ping/pong timers

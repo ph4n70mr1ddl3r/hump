@@ -367,7 +367,7 @@ HandRank HandRanking::evaluate(const std::vector<Card>& cards) {
     return best_rank;
 }
 
-std::string HandRanking::rankToString(HandRank rank) {
+std::string HandRanking::rankToString(HandRank rank) noexcept {
     switch (rank) {
         case HandRank::HIGH_CARD: return "HIGH_CARD";
         case HandRank::ONE_PAIR: return "ONE_PAIR";

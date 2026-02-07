@@ -198,10 +198,6 @@ void calculateSidePots(Hand& hand) {
     hand.side_pots = pot::calculateSidePots(hand.players, hand.player_bets);
 }
 
-void updatePot(Hand& hand, Player* player, int amount) {
-    hand.pot += amount;
-}
-
 void resetHand(Hand& hand) {
     hand.id.clear();
     hand.table = nullptr;

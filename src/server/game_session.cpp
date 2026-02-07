@@ -67,7 +67,7 @@ void GameSession::handleMessage(const std::string& message, std::shared_ptr<WebS
         }
         else if (type == "ping")
         {
-            handlePing(json.at("payload"), session);
+            handlePing(session);
         }
         else if (type == "top_up")
         {
@@ -473,7 +473,7 @@ void GameSession::handleJoin(const nlohmann::json& payload, std::shared_ptr<WebS
         sendJson(session, createErrorResponse("invalid_input", "Missing 'name' field"));
         return;
     }
-    std::string name = payload.at("name").get<std::string>();
+    std::string name = std::move(payload.at("name").get<std::string>());
     if (name.empty()) {
         sendJson(session, createErrorResponse("invalid_input", "Player name cannot be empty"));
         return;
@@ -483,7 +483,7 @@ void GameSession::handleJoin(const nlohmann::json& payload, std::shared_ptr<WebS
     std::string provided_player_id;
     if (payload.contains("player_id"))
     {
-        provided_player_id = payload.at("player_id").get<std::string>();
+        provided_player_id = std::move(payload.at("player_id").get<std::string>());
     }
 
     // If player_id provided, attempt reconnection
@@ -638,8 +638,8 @@ void GameSession::handleAction(const nlohmann::json& payload, std::shared_ptr<We
         sendJson(session, createErrorResponse("invalid_input", "Missing required fields (hand_id, action, amount)"));
         return;
     }
-    std::string hand_id = payload.at("hand_id").get<std::string>();
-    std::string action = payload.at("action").get<std::string>();
+    std::string hand_id = std::move(payload.at("hand_id").get<std::string>());
+    std::string action = std::move(payload.at("action").get<std::string>());
     int amount = payload.at("amount").get<int>();
 
     if (action != "fold" && action != "call" && action != "raise") {
@@ -648,6 +648,10 @@ void GameSession::handleAction(const nlohmann::json& payload, std::shared_ptr<We
     }
     if (amount < 0) {
         sendJson(session, createErrorResponse("invalid_amount", "Amount cannot be negative"));
+        return;
+    }
+    if (amount > common::constants::STARTING_STACK * 10) {
+        sendJson(session, createErrorResponse("invalid_amount", "Amount exceeds maximum allowed"));
         return;
     }
 
@@ -703,7 +707,7 @@ void GameSession::handleAction(const nlohmann::json& payload, std::shared_ptr<We
     }
 }
 
-void GameSession::handlePing(const nlohmann::json& payload, std::shared_ptr<WebSocketSession> session)
+void GameSession::handlePing(std::shared_ptr<WebSocketSession> session)
 {
     if (!session) {
         common::log::log(common::log::Level::ERROR, "handlePing: null session");

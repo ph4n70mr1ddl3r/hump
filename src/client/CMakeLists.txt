@@ -1,7 +1,6 @@
 # Client library
 add_library(client_lib STATIC
     client.cpp
-    bot.cpp
     random_strategy.cpp
     delay.cpp
     stack_management.cpp

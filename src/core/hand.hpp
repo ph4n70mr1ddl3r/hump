@@ -31,9 +31,6 @@ std::vector<Player*> determineWinners(const Hand& hand);
 // Calculate side pots based on all-in situations
 void calculateSidePots(Hand& hand);
 
-// Update pot amounts after an action
-void updatePot(Hand& hand, Player* player, int amount);
-
 // Reset hand for a new hand (clear cards, pots, etc.)
 void resetHand(Hand& hand);
 
