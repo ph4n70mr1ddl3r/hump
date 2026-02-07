@@ -5,6 +5,24 @@ ConnectionManager::ConnectionManager(boost::asio::io_context& ioc)
 {
 }
 
+ConnectionManager::~ConnectionManager()
+{
+    std::lock_guard<std::mutex> lock(timers_mutex_);
+    for (auto& [player_id, timers] : timers_)
+    {
+        boost::system::error_code ec;
+        if (timers.grace_timer)
+        {
+            timers.grace_timer->cancel(ec);
+        }
+        if (timers.removal_timer)
+        {
+            timers.removal_timer->cancel(ec);
+        }
+    }
+    timers_.clear();
+}
+
 void ConnectionManager::startGraceTimer(const std::string& player_id, int grace_time_ms, TimerCallback on_expiry)
 {
     std::lock_guard<std::mutex> lock(timers_mutex_);
@@ -19,7 +37,7 @@ void ConnectionManager::startGraceTimer(const std::string& player_id, int grace_
     }
 
     timers.grace_timer->expires_after(std::chrono::milliseconds(grace_time_ms));
-    timers.grace_timer->async_wait([this, player_id, on_expiry](const boost::system::error_code& ec) {
+    timers.grace_timer->async_wait([player_id, on_expiry](const boost::system::error_code& ec) {
         if (!ec)
         {
             on_expiry(player_id);
@@ -41,7 +59,7 @@ void ConnectionManager::startRemovalTimer(const std::string& player_id, int remo
     }
 
     timers.removal_timer->expires_after(std::chrono::milliseconds(removal_time_ms));
-    timers.removal_timer->async_wait([this, player_id, on_expiry](const boost::system::error_code& ec) {
+    timers.removal_timer->async_wait([player_id, on_expiry](const boost::system::error_code& ec) {
         if (!ec)
         {
             on_expiry(player_id);

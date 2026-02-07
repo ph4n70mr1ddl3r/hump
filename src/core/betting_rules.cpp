@@ -54,9 +54,9 @@ bool BettingRules::isRoundComplete(const std::vector<bool>& has_acted, const std
         }
     }
     if (!all_acted) return false;
-    // Check if all bets are equal to current bet (or zero if folded?)
+    // Check if all bets are equal to current bet (or FOLDED_BET if player folded)
     for (int bet : bets) {
-        if (bet != current_bet && bet != -1) { // -1 could represent folded
+        if (bet != current_bet && bet != FOLDED_BET) {
             return false;
         }
     }

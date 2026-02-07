@@ -40,17 +40,15 @@ bool isStraight(const std::vector<int>& ranks) {
         if (straight) return true;
     }
 
-    // Check Ace-low straight (A, 2, 3, 4, 5)
-    if (ranks[0] == 12) { // Ace
-        std::vector<int> low_ranks = {12, 0, 1, 2, 3};
-        bool has_all = true;
-        for (int r : low_ranks) {
-            if (std::find(ranks.begin(), ranks.end(), r) == ranks.end()) {
-                has_all = false;
-                break;
-            }
-        }
-        if (has_all) return true;
+    // Check Ace-low straight (A, 2, 3, 4, 5) - need all 5 cards present
+    bool has_ace = std::find(ranks.begin(), ranks.end(), 12) != ranks.end();
+    bool has_two = std::find(ranks.begin(), ranks.end(), 0) != ranks.end();
+    bool has_three = std::find(ranks.begin(), ranks.end(), 1) != ranks.end();
+    bool has_four = std::find(ranks.begin(), ranks.end(), 2) != ranks.end();
+    bool has_five = std::find(ranks.begin(), ranks.end(), 3) != ranks.end();
+    
+    if (has_ace && has_two && has_three && has_four && has_five) {
+        return true;
     }
 
     return false;
@@ -272,12 +270,11 @@ std::vector<int> getComparisonKey(const std::vector<CardValue>& cards, HandRank 
             // For straight, need to handle Ace-low straight (5-4-3-2-A)
             // For Ace-low straight, the highest card is 5 (rank 3)
             bool is_ace_low_straight = false;
-            if (rank == HandRank::STRAIGHT || rank == HandRank::STRAIGHT_FLUSH || rank == HandRank::ROYAL_FLUSH) {
+            if (rank == HandRank::STRAIGHT || rank == HandRank::STRAIGHT_FLUSH) {
                 // Check for Ace-low straight: A,2,3,4,5
-                std::vector<int> straight_ranks = ranks;
-                std::sort(straight_ranks.begin(), straight_ranks.end()); // ascending
-                if (straight_ranks[0] == 0 && straight_ranks[1] == 1 && straight_ranks[2] == 2 &&
-                    straight_ranks[3] == 3 && straight_ranks[4] == 12) {
+                // The 5 cards would be ranks 12, 0, 1, 2, 3 in sorted descending order
+                // If the highest card is Ace (12) and lowest is 2 (0), it might be A-2-3-4-5
+                if (ranks.size() == 5 && ranks[0] == 12 && ranks[4] == 0) {
                     is_ace_low_straight = true;
                 }
             }

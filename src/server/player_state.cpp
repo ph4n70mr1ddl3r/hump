@@ -43,10 +43,10 @@ void PlayerStateManager::onGraceTimerExpired(const std::string& player_id)
         player->is_sitting_out = true;
     }
     // Start removal timer
-    connection_manager_.startRemovalTimer(player_id, removal_time_ms_,
-        [this](const std::string& player_id) {
-            onRemovalTimerExpired(player_id);
-        });
+    if (on_player_removed_callback_)
+    {
+        connection_manager_.startRemovalTimer(player_id, removal_time_ms_, on_player_removed_callback_);
+    }
 }
 
 void PlayerStateManager::onRemovalTimerExpired(const std::string& player_id)

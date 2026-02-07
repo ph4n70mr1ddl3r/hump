@@ -203,7 +203,7 @@ void TableManager::dealCommunityCards() {
     }
 
     for (int i = 0; i < count; ++i) {
-        if (hand->deck.size() == 0) {
+        if (hand->deck.empty()) {
             common::log::log(common::log::Level::ERROR, "Deck exhausted while dealing community cards");
             return;
         }

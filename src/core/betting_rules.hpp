@@ -18,6 +18,9 @@ struct BettingState {
 
 class BettingRules {
 public:
+    // Special value to indicate a folded player's bet
+    static constexpr int FOLDED_BET = -1;
+
     // Validate if an action is valid given current betting round and player stack
     static bool isValidAction(Action action, int amount, const BettingState& round, int player_stack);
 

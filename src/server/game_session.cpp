@@ -26,7 +26,8 @@ GameSession::GameSession(boost::asio::io_context& ioc, int action_timeout_ms, in
 
 nlohmann::json GameSession::createErrorResponse(const std::string& code, const std::string& message) const
 {
-    common::log::log(common::log::Level::WARN, "Error response: " + code + " - " + message + " (current hand: " + (table_manager_.getCurrentHand() ? table_manager_.getCurrentHand()->id : "none") + ")");
+    const Hand* hand = table_manager_.getCurrentHand();
+    common::log::log(common::log::Level::WARN, "Error response: " + code + " - " + message + " (current hand: " + (hand ? hand->id : "none") + ")");
     return {
         {"type", "error"},
         {"payload", {
@@ -371,10 +372,13 @@ void GameSession::broadcastHandCompleted()
 void GameSession::broadcastPlayerRemoved(const std::string& player_id)
 {
     auto player = table_manager_.getPlayer(player_id);
-    int seat = (player) ? player->seat : 0;
+    if (!player) {
+        common::log::log(common::log::Level::ERROR, "broadcastPlayerRemoved: player not found: " + player_id);
+        return;
+    }
     nlohmann::json payload = {
         {"player_id", player_id},
-        {"seat", seat}
+        {"seat", player->seat}
     };
     nlohmann::json message = {
         {"type", "player_removed"},
@@ -489,11 +493,6 @@ void GameSession::handleJoin(const nlohmann::json& payload, std::shared_ptr<WebS
         if (player && (player->connection_status == ConnectionStatus::DISCONNECTED ||
                        player->connection_status == ConnectionStatus::RECONNECTING))
         {
-            if (!player) {
-                common::log::log(common::log::Level::ERROR, "handleJoin: player became null during reconnection check");
-                sendJson(session, createErrorResponse("internal_error", "Player not available"));
-                return;
-            }
             {
                 std::lock_guard<std::mutex> lock(sessions_mutex_);
                 auto existing_session_it = player_sessions_.find(provided_player_id);

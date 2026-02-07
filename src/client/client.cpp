@@ -142,7 +142,7 @@ void Client::run()
                 std::cout << "Hand started" << std::endl;
                 // Could store hand info
             }
-            else             if (type == "action_request")
+            else if (type == "action_request")
             {
                 if (!json.contains("payload")) {
                     std::cerr << "action_request missing payload" << std::endl;
