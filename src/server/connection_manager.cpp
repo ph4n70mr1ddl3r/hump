@@ -27,7 +27,7 @@ void ConnectionManager::startGraceTimer(const std::string& player_id, int grace_
             if (it != timers_.end())
             {
                 it->second.grace_timer.reset();
-                // If both timers are null, remove entry
+                // If both timers are null, remove entry safely
                 if (!it->second.removal_timer)
                 {
                     timers_.erase(it);

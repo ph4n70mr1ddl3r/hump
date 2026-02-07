@@ -49,6 +49,10 @@ void dealCommunityCards(Hand& hand, Deck& deck, int count) {
 }
 
 bool applyAction(Hand& hand, Player* player, const std::string& action, int amount) {
+    if (!player) {
+        return false;
+    }
+
     // Simplified validation
     if (action == "fold") {
         // Mark player folded
@@ -61,6 +65,7 @@ bool applyAction(Hand& hand, Player* player, const std::string& action, int amou
         }
     } else if (action == "call") {
         if (amount > player->stack) return false;
+        if (amount < 0) return false;
         player->stack -= amount;
         hand.pot += amount;
         // Update player's total bet amount
@@ -74,6 +79,7 @@ bool applyAction(Hand& hand, Player* player, const std::string& action, int amou
     } else if (action == "raise") {
         if (amount < hand.min_raise) return false;
         if (amount > player->stack) return false;
+        if (amount < 0) return false;
         player->stack -= amount;
         hand.pot += amount;
         // Update player's total bet amount
@@ -84,7 +90,7 @@ bool applyAction(Hand& hand, Player* player, const std::string& action, int amou
                 break;
             }
         }
-        hand.min_raise = amount; // simplistic
+        hand.min_raise = amount;
     } else {
         return false;
     }
@@ -133,8 +139,9 @@ bool isHandComplete(const Hand& hand) {
     }
     // Count players who haven't folded
     int active_players = 0;
+    size_t folded_size = hand.folded.size();
     for (size_t i = 0; i < hand.players.size(); ++i) {
-        if (i >= hand.folded.size() || !hand.folded[i]) {
+        if (i >= folded_size || !hand.folded[i]) {
             active_players++;
         }
     }

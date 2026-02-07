@@ -2,6 +2,7 @@
 #include "../core/models/player.hpp"
 #include "../core/hand.hpp"
 #include <algorithm>
+#include <chrono>
 
 namespace player_action {
 
@@ -27,7 +28,9 @@ bool validateAction(const Hand& hand, const Player& player, const std::string& a
     }
 
     // Player must be current player to act (simplified)
-    // TODO: compare player pointer with hand.current_player_to_act
+    if (hand.current_player_to_act != &player) {
+        return false;
+    }
     return true;
 }
 
@@ -72,7 +75,7 @@ bool applyAction(Hand& hand, Player& player, const std::string& action, int amou
     history_entry.player = &player;
     history_entry.action = action;
     history_entry.amount = amount;
-    history_entry.timestamp = 0; // TODO
+    history_entry.timestamp = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     hand.history.push_back(history_entry);
 
     // Advance current player (simplified)

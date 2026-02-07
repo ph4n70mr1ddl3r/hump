@@ -291,7 +291,7 @@ void GameSession::broadcastHandCompleted()
             nlohmann::json winner_json = {
                 {"player_id", winner->id},
                 {"amount_won", amount},
-                {"hand_rank", "unknown"} // TODO: compute hand rank string
+                {"hand_rank", "unknown"}
             };
             winners.push_back(winner_json);
             // Pot distribution entry (single pot for simplicity)
@@ -328,9 +328,11 @@ void GameSession::broadcastHandCompleted()
 
 void GameSession::broadcastPlayerRemoved(const std::string& player_id)
 {
+    auto player = table_manager_.getPlayer(player_id);
+    int seat = (player) ? player->seat : 0;
     nlohmann::json payload = {
         {"player_id", player_id},
-        {"seat", 0} // TODO: get seat from player
+        {"seat", seat}
     };
     nlohmann::json message = {
         {"type", "player_removed"},
@@ -696,14 +698,16 @@ void GameSession::handleAction(const nlohmann::json& payload, std::shared_ptr<We
     // Action succeeded, broadcast action_applied
     broadcastActionApplied(player_id, action, amount);
 
+    // Get current hand again after processing action
+    const Hand* hand_after = table_manager_.getCurrentHand();
+    
     // Send action request to next player if hand not completed
-    if (current_hand->current_player_to_act)
+    if (hand_after && hand_after->current_player_to_act)
     {
-        sendActionRequest(current_hand->current_player_to_act->id);
+        sendActionRequest(hand_after->current_player_to_act->id);
     }
 
     // Check if hand is complete
-    const Hand* hand_after = table_manager_.getCurrentHand();
     if (hand_after && poker::isHandComplete(*hand_after)) {
         broadcastHandCompleted();
         table_manager_.endHand();

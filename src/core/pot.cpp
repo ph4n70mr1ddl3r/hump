@@ -67,8 +67,8 @@ std::vector<Player*> getEligiblePlayersForPot(const std::vector<Player*>& player
 void distributePot(Hand& hand, const std::vector<Player*>& winners) {
     // Distribute main pot to winners (as before)
     if (!winners.empty() && hand.pot > 0) {
-        int share = hand.pot / winners.size();
-        int remainder = hand.pot % winners.size();
+        int share = hand.pot / static_cast<int>(winners.size());
+        int remainder = hand.pot % static_cast<int>(winners.size());
         for (size_t i = 0; i < winners.size(); ++i) {
             int amount = share + (i < static_cast<size_t>(remainder) ? 1 : 0);
             if (amount > 0) {
@@ -91,8 +91,8 @@ void distributePot(Hand& hand, const std::vector<Player*>& winners) {
         // If no eligible winners (should not happen), skip
         if (eligible_winners.empty()) continue;
         // Split side pot among eligible winners equally (since they already have same hand rank)
-        int share = side_pot.amount / eligible_winners.size();
-        int remainder = side_pot.amount % eligible_winners.size();
+        int share = side_pot.amount / static_cast<int>(eligible_winners.size());
+        int remainder = side_pot.amount % static_cast<int>(eligible_winners.size());
         for (size_t i = 0; i < eligible_winners.size(); ++i) {
             int amount = share + (i < static_cast<size_t>(remainder) ? 1 : 0);
             if (amount > 0) {

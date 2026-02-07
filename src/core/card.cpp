@@ -72,6 +72,10 @@ Card::Card(const std::string& str) {
         throw std::invalid_argument("Card string must be 2 characters");
     }
 
+    if (!std::isprint(str[0]) || !std::isprint(str[1])) {
+        throw std::invalid_argument("Card string contains non-printable characters");
+    }
+
     Rank rank = charToRank(str[0]);
     Suit suit = charToSuit(str[1]);
     value_ = static_cast<uint8_t>(rank) * NUM_SUITS + static_cast<uint8_t>(suit);

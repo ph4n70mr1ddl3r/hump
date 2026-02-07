@@ -14,15 +14,40 @@ int main(int argc, char** argv) {
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         if (arg == "--port" && i + 1 < argc) {
-            port = static_cast<unsigned short>(std::stoi(argv[++i]));
+            try {
+                port = static_cast<unsigned short>(std::stoi(argv[++i]));
+            } catch (const std::exception& e) {
+                std::cerr << "Invalid port value: " << argv[i] << "\n";
+                return 1;
+            }
         } else if (arg == "--ample-time" && i + 1 < argc) {
-            disconnect_grace_time_ms = std::stoi(argv[++i]);
+            try {
+                disconnect_grace_time_ms = std::stoi(argv[++i]);
+            } catch (const std::exception& e) {
+                std::cerr << "Invalid disconnect grace time value: " << argv[i] << "\n";
+                return 1;
+            }
         } else if (arg == "--disconnect-grace-time" && i + 1 < argc) {
-            disconnect_grace_time_ms = std::stoi(argv[++i]);
+            try {
+                disconnect_grace_time_ms = std::stoi(argv[++i]);
+            } catch (const std::exception& e) {
+                std::cerr << "Invalid disconnect grace time value: " << argv[i] << "\n";
+                return 1;
+            }
         } else if (arg == "--action-timeout" && i + 1 < argc) {
-            action_timeout_ms = std::stoi(argv[++i]);
+            try {
+                action_timeout_ms = std::stoi(argv[++i]);
+            } catch (const std::exception& e) {
+                std::cerr << "Invalid action timeout value: " << argv[i] << "\n";
+                return 1;
+            }
         } else if (arg == "--removal-timeout" && i + 1 < argc) {
-            removal_timeout_ms = std::stoi(argv[++i]);
+            try {
+                removal_timeout_ms = std::stoi(argv[++i]);
+            } catch (const std::exception& e) {
+                std::cerr << "Invalid removal timeout value: " << argv[i] << "\n";
+                return 1;
+            }
         } else if (arg == "--help") {
             std::cout << "Usage: " << argv[0] << " [--port <port>] [--ample-time <seconds>] [--removal-timeout <seconds>] [--action-timeout <ms>]\n";
             std::cout << "Defaults: port=8080, ample-time=30s, removal-timeout=60s, action-timeout=30000ms\n";
