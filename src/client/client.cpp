@@ -47,6 +47,12 @@ void Client::run()
         }
         catch (const nlohmann::json::parse_error& e) {
             std::cerr << "Failed to parse welcome message: " << e.what() << std::endl;
+            ws.close(websocket::close_code::abnormal);
+            return;
+        }
+        catch (const nlohmann::json::exception& e) {
+            std::cerr << "JSON error in welcome message: " << e.what() << std::endl;
+            ws.close(websocket::close_code::abnormal);
             return;
         }
         if (!welcome_json.contains("type") || welcome_json.at("type") != "welcome")
@@ -83,6 +89,12 @@ void Client::run()
         }
         catch (const nlohmann::json::parse_error& e) {
             std::cerr << "Failed to parse join_ack message: " << e.what() << std::endl;
+            ws.close(websocket::close_code::abnormal);
+            return;
+        }
+        catch (const nlohmann::json::exception& e) {
+            std::cerr << "JSON error in join_ack message: " << e.what() << std::endl;
+            ws.close(websocket::close_code::abnormal);
             return;
         }
         if (!join_ack_json.contains("type") || join_ack_json.at("type") != "join_ack")
@@ -111,6 +123,12 @@ void Client::run()
             }
             catch (const nlohmann::json::parse_error& e) {
                 std::cerr << "Failed to parse message: " << e.what() << std::endl;
+                ws.close(websocket::close_code::abnormal);
+                break;
+            }
+            catch (const nlohmann::json::exception& e) {
+                std::cerr << "JSON error in message: " << e.what() << std::endl;
+                ws.close(websocket::close_code::abnormal);
                 break;
             }
             if (!json.contains("type")) {

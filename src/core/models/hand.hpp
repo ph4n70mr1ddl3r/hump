@@ -57,6 +57,11 @@ struct Hand {
         return false; // placeholder
     }
 
+    // Get current player to act
+    Player* getCurrentPlayer() const {
+        return current_player_to_act;
+    }
+
     // Advance to next betting round
     bool advanceRound() {
         switch (current_betting_round) {

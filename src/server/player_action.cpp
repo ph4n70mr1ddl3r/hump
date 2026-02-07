@@ -14,11 +14,21 @@ bool validateAction(const Hand& hand, const Player& player, const std::string& a
     if (action != "fold" && action != "call" && action != "raise") {
         return false;
     }
-    if (amount < 0) return false;
+    if (amount < 0) {
+        return false;
+    }
+
+    // Validate player stack invariants
+    if (player.stack < 0) {
+        return false;
+    }
 
     // Check player has enough stack for call/raise
     if (action == "call" || action == "raise") {
         if (amount > player.stack) {
+            return false;
+        }
+        if (amount < 0) {
             return false;
         }
     }

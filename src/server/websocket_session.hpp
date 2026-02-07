@@ -5,6 +5,7 @@
 #include <boost/asio/steady_timer.hpp>
 #include <memory>
 #include <queue>
+#include <atomic>
 #include "../common/constants.hpp"
 
 namespace beast = boost::beast;
@@ -43,10 +44,10 @@ private:
     beast::flat_buffer buffer_;
     std::weak_ptr<GameSession> game_session_;
     std::queue<std::string> write_queue_;
-    bool is_writing_ = false;
+    std::atomic<bool> is_writing_{false};
 
     // Ping/pong timers
     net::steady_timer ping_timer_;
     net::steady_timer pong_timeout_timer_;
-    bool pong_pending_ = false;
+    std::atomic<bool> pong_pending_{false};
 };
