@@ -1,5 +1,6 @@
 #include "server.hpp"
 #include "game_session.hpp"
+#include "../common/logging.hpp"
 #include <boost/asio.hpp>
 #include <iostream>
 
@@ -29,7 +30,7 @@ void Server::start_accept()
             }
             else
             {
-                std::cerr << "Accept error: " << ec.message() << std::endl;
+                common::log::log(common::log::Level::ERROR, "Accept error: " + ec.message());
             }
             start_accept();
         });

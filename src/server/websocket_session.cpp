@@ -1,5 +1,6 @@
 #include "websocket_session.hpp"
 #include "game_session.hpp"
+#include "../common/logging.hpp"
 #include <iostream>
 
 WebSocketSession::WebSocketSession(tcp::socket socket)
@@ -40,7 +41,7 @@ void WebSocketSession::on_accept(beast::error_code ec)
 {
     if (ec)
     {
-        std::cerr << "WebSocket accept error: " << ec.message() << std::endl;
+        common::log::log(common::log::Level::ERROR, "WebSocket accept error: " + ec.message());
         return;
     }
     // Send welcome message to client
@@ -81,7 +82,7 @@ void WebSocketSession::on_read(beast::error_code ec, std::size_t bytes_transferr
     {
         if (ec != websocket::error::closed)
         {
-            std::cerr << "WebSocket read error: " << ec.message() << std::endl;
+            common::log::log(common::log::Level::ERROR, "WebSocket read error: " + ec.message());
         }
         // Notify game session about disconnection
         if (auto game_session = game_session_.lock())
@@ -118,7 +119,7 @@ void WebSocketSession::on_write(beast::error_code ec, std::size_t bytes_transfer
 {
     if (ec)
     {
-        std::cerr << "WebSocket write error: " << ec.message() << std::endl;
+        common::log::log(common::log::Level::ERROR, "WebSocket write error: " + ec.message());
         return;
     }
 
@@ -138,7 +139,7 @@ void WebSocketSession::on_write(beast::error_code ec, std::size_t bytes_transfer
 
 void WebSocketSession::start_ping_timer()
 {
-    ping_timer_.expires_after(std::chrono::milliseconds(ping_interval_ms_));
+    ping_timer_.expires_after(std::chrono::milliseconds(common::constants::PING_INTERVAL_MS));
     ping_timer_.async_wait(
         beast::bind_front_handler(
             &WebSocketSession::on_ping_timer,
@@ -155,7 +156,7 @@ void WebSocketSession::on_ping_timer(beast::error_code ec)
 
     // Start pong timeout timer
     pong_pending_ = true;
-    pong_timeout_timer_.expires_after(std::chrono::milliseconds(pong_timeout_ms_));
+    pong_timeout_timer_.expires_after(std::chrono::milliseconds(common::constants::PONG_TIMEOUT_MS));
     pong_timeout_timer_.async_wait(
         beast::bind_front_handler(
             &WebSocketSession::on_pong_timeout,

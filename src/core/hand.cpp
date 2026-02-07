@@ -2,15 +2,18 @@
 #include "models/player.hpp"
 #include "hand_ranking.hpp"
 #include "pot.hpp"
+#include "../common/constants.hpp"
+#include "../common/uuid.hpp"
 #include <algorithm>
 #include <stdexcept>
 #include <cstdlib>
+#include <chrono>
 
 namespace poker {
 
 void startHand(Hand& hand, Deck& deck, Player* dealer, Player* small_blind, Player* big_blind) {
     // Reset hand state
-    hand.id = "hand_" + std::to_string(std::rand()); // TODO: UUID
+    hand.id = "hand_" + common::uuid::generate();
     hand.table = nullptr; // caller should set
     hand.players = {small_blind, big_blind};
     hand.player_bets.resize(hand.players.size(), 0);
@@ -22,7 +25,7 @@ void startHand(Hand& hand, Deck& deck, Player* dealer, Player* small_blind, Play
     hand.side_pots.clear();
     hand.current_betting_round = BettingRound::PREFLOP;
     hand.current_player_to_act = small_blind; // small blind acts first preflop? Actually big blind acts last preflop. Simplified.
-    hand.min_raise = 4; // big blind
+    hand.min_raise = common::constants::BIG_BLIND;
     hand.history.clear();
     hand.winners.clear();
     hand.completed_at = 0;
@@ -91,7 +94,7 @@ bool applyAction(Hand& hand, Player* player, const std::string& action, int amou
     history_entry.player = player;
     history_entry.action = action;
     history_entry.amount = amount;
-    history_entry.timestamp = 0; // TODO: get current time
+    history_entry.timestamp = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     hand.history.push_back(history_entry);
 
     // Move to next player (simplified)

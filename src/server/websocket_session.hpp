@@ -5,6 +5,7 @@
 #include <boost/asio/steady_timer.hpp>
 #include <memory>
 #include <queue>
+#include "../common/constants.hpp"
 
 namespace beast = boost::beast;
 namespace websocket = beast::websocket;
@@ -46,7 +47,5 @@ private:
     // Ping/pong timers
     net::steady_timer ping_timer_;
     net::steady_timer pong_timeout_timer_;
-    static constexpr int ping_interval_ms_ = 30000; // 30 seconds
-    static constexpr int pong_timeout_ms_ = 10000; // 10 seconds
     bool pong_pending_ = false;
 };

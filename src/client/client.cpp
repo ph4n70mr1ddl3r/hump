@@ -1,7 +1,13 @@
 #include "client.hpp"
+#include "../common/json_serialization.hpp"
+#include "random_strategy.hpp"
+#include "delay.hpp"
+#include "stack_management.hpp"
 #include <boost/beast.hpp>
 #include <boost/asio.hpp>
+#include <nlohmann/json.hpp>
 #include <iostream>
+#include <string>
 
 namespace beast = boost::beast;
 namespace websocket = beast::websocket;
@@ -12,14 +18,6 @@ Client::Client(const std::string& host, const std::string& port, const std::stri
     : host_(host), port_(port), name_(name), player_id_(""), stack_(0)
 {
 }
-
-#include "../common/json_serialization.hpp"
-#include <nlohmann/json.hpp>
-#include "random_strategy.hpp"
-#include "delay.hpp"
-#include "stack_management.hpp"
-#include <iostream>
-#include <string>
 
 void Client::run()
 {
@@ -44,9 +42,13 @@ void Client::run()
         buffer.consume(buffer.size());
 
         nlohmann::json welcome_json = nlohmann::json::parse(welcome_msg);
-        if (welcome_json.at("type") != "welcome")
+        if (!welcome_json.contains("type") || welcome_json.at("type") != "welcome")
         {
             std::cerr << "Expected welcome message, got: " << welcome_msg << std::endl;
+            return;
+        }
+        if (!welcome_json.contains("payload") || !welcome_json.at("payload").contains("player_id")) {
+            std::cerr << "Invalid welcome message: missing payload or player_id" << std::endl;
             return;
         }
 
@@ -69,9 +71,13 @@ void Client::run()
         buffer.consume(buffer.size());
 
         nlohmann::json join_ack_json = nlohmann::json::parse(join_ack_msg);
-        if (join_ack_json.at("type") != "join_ack")
+        if (!join_ack_json.contains("type") || join_ack_json.at("type") != "join_ack")
         {
             std::cerr << "Expected join_ack, got: " << join_ack_msg << std::endl;
+            return;
+        }
+        if (!join_ack_json.contains("payload") || !join_ack_json.at("payload").contains("seat")) {
+            std::cerr << "Invalid join_ack message: missing payload or seat" << std::endl;
             return;
         }
 
@@ -93,13 +99,24 @@ void Client::run()
                 std::cout << "Hand started" << std::endl;
                 // Could store hand info
             }
-            else if (type == "action_request")
+            else             if (type == "action_request")
             {
-                std::string hand_id = json.at("payload").at("hand_id").get<std::string>();
-                nlohmann::json possible_actions = json.at("payload").at("possible_actions");
-                int call_amount = json.at("payload").at("call_amount").get<int>();
-                int min_raise = json.at("payload").at("min_raise").get<int>();
-                int max_raise = json.at("payload").at("max_raise").get<int>();
+                if (!json.contains("payload")) {
+                    std::cerr << "action_request missing payload" << std::endl;
+                    return;
+                }
+                const auto& payload = json.at("payload");
+                if (!payload.contains("hand_id") || !payload.contains("possible_actions") ||
+                    !payload.contains("call_amount") || !payload.contains("min_raise") ||
+                    !payload.contains("max_raise")) {
+                    std::cerr << "action_request missing required fields" << std::endl;
+                    return;
+                }
+                std::string hand_id = payload.at("hand_id").get<std::string>();
+                nlohmann::json possible_actions = payload.at("possible_actions");
+                int call_amount = payload.at("call_amount").get<int>();
+                int min_raise = payload.at("min_raise").get<int>();
+                int max_raise = payload.at("max_raise").get<int>();
 
                 // Convert possible actions JSON array to vector<string>
                 std::vector<std::string> actions;
@@ -134,7 +151,15 @@ void Client::run()
             {
                 std::cout << "Hand completed: " << msg << std::endl;
                 // Parse updated stacks
+                if (!json.contains("payload")) {
+                    std::cerr << "hand_completed missing payload" << std::endl;
+                    return;
+                }
                 const auto& payload = json.at("payload");
+                if (!payload.contains("updated_stacks")) {
+                    std::cerr << "hand_completed missing updated_stacks" << std::endl;
+                    return;
+                }
                 const auto& updated_stacks = payload.at("updated_stacks");
                 if (updated_stacks.contains(player_id_)) {
                     stack_ = updated_stacks.at(player_id_).get<int>();
@@ -151,6 +176,10 @@ void Client::run()
             }
             else if (type == "top_up_ack")
             {
+                if (!json.contains("payload") || !json.at("payload").contains("new_stack")) {
+                    std::cerr << "top_up_ack missing required fields" << std::endl;
+                    return;
+                }
                 const auto& payload = json.at("payload");
                 stack_ = payload.at("new_stack").get<int>();
                 std::cout << "Stack topped up to " << stack_ << std::endl;

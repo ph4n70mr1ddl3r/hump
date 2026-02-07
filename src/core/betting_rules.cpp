@@ -1,4 +1,5 @@
 #include "betting_rules.hpp"
+#include "../common/constants.hpp"
 #include <algorithm>
 
 bool BettingRules::isValidAction(Action action, int amount, const BettingState& round, int player_stack) {
@@ -37,7 +38,7 @@ BettingState BettingRules::applyAction(Action action, int amount, const BettingS
         case Action::RAISE:
             new_round.pot += amount;
             new_round.current_bet = amount;
-            new_round.min_raise = calculateMinRaise(amount, 4); // assuming big blind = 4
+            new_round.min_raise = calculateMinRaise(amount, common::constants::BIG_BLIND);
             break;
     }
     return new_round;

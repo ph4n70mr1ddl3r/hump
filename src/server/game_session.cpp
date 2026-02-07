@@ -1,6 +1,8 @@
 #include "game_session.hpp"
 #include "../common/json_serialization.hpp"
 #include "../common/uuid.hpp"
+#include "../common/constants.hpp"
+#include "../common/logging.hpp"
 #include "../core/hand.hpp"
 #include <boost/beast.hpp>
 #include <iostream>
@@ -25,6 +27,28 @@ void GameSession::handleMessage(const std::string& message, std::shared_ptr<WebS
     try
     {
         nlohmann::json json = nlohmann::json::parse(message);
+        if (!json.contains("type")) {
+            nlohmann::json error = {
+                {"type", "error"},
+                {"payload", {
+                    {"code", "invalid_json"},
+                    {"message", "Missing 'type' field"}
+                }}
+            };
+            sendJson(session, error);
+            return;
+        }
+        if (!json.contains("payload")) {
+            nlohmann::json error = {
+                {"type", "error"},
+                {"payload", {
+                    {"code", "invalid_json"},
+                    {"message", "Missing 'payload' field"}
+                }}
+            };
+            sendJson(session, error);
+            return;
+        }
         std::string type = json.at("type").get<std::string>();
 
         if (type == "join")
@@ -127,8 +151,8 @@ void GameSession::broadcastHandStarted()
     }
 
     // Determine small blind and big blind amounts (fixed per spec)
-    int small_blind = 2;
-    int big_blind = 4;
+    int small_blind = common::constants::SMALL_BLIND;
+    int big_blind = common::constants::BIG_BLIND;
 
     // Determine current player to act ID
     std::string current_player_id = "";
@@ -167,8 +191,8 @@ void GameSession::sendActionRequest(const std::string& player_id)
     nlohmann::json possible_actions = nlohmann::json::array({"fold", "call", "raise"});
 
     // Calculate call amount (amount needed to call current bet)
-    // For now, assume call amount is big blind (4)
-    int call_amount = 4;
+    // For now, assume call amount is big blind
+    int call_amount = common::constants::BIG_BLIND;
 
     // Get min raise from hand
     int min_raise = hand->min_raise;
@@ -177,7 +201,7 @@ void GameSession::sendActionRequest(const std::string& player_id)
     int max_raise = player->stack;
 
     // Timeout (configurable, default 30 seconds)
-    int timeout_ms = 30000;
+    int timeout_ms = common::constants::ACTION_TIMEOUT_MS;
 
     nlohmann::json payload = {
         {"hand_id", hand->id},
@@ -390,6 +414,17 @@ nlohmann::json GameSession::parseMessage(const std::string& message)
 
 void GameSession::handleJoin(const nlohmann::json& payload, std::shared_ptr<WebSocketSession> session)
 {
+    if (!payload.contains("name")) {
+        nlohmann::json error = {
+            {"type", "error"},
+            {"payload", {
+                {"code", "invalid_input"},
+                {"message", "Missing 'name' field"}
+            }}
+        };
+        sendJson(session, error);
+        return;
+    }
     std::string name = payload.at("name").get<std::string>();
     // Security hardening: validate name is non-empty
     if (name.empty()) {
@@ -406,7 +441,7 @@ void GameSession::handleJoin(const nlohmann::json& payload, std::shared_ptr<WebS
 
     // Optional player_id for reconnection
     std::string provided_player_id;
-    if (payload.find("player_id") != payload.end())
+    if (payload.contains("player_id"))
     {
         provided_player_id = payload.at("player_id").get<std::string>();
     }
@@ -528,7 +563,7 @@ void GameSession::handleJoin(const nlohmann::json& payload, std::shared_ptr<WebS
     auto player = std::make_shared<Player>();
     player->id = player_id;
     player->name = name;
-    player->stack = 400; // starting stack per spec
+    player->stack = common::constants::STARTING_STACK;
     player->seat = seat;
     player->hole_cards.clear();
     player->connection_status = ConnectionStatus::CONNECTED;
@@ -573,10 +608,21 @@ void GameSession::handleJoin(const nlohmann::json& payload, std::shared_ptr<WebS
 
 void GameSession::handleAction(const nlohmann::json& payload, std::shared_ptr<WebSocketSession> session)
 {
+    if (!payload.contains("hand_id") || !payload.contains("action") || !payload.contains("amount")) {
+        nlohmann::json error = {
+            {"type", "error"},
+            {"payload", {
+                {"code", "invalid_input"},
+                {"message", "Missing required fields (hand_id, action, amount)"}
+            }}
+        };
+        sendJson(session, error);
+        return;
+    }
     std::string hand_id = payload.at("hand_id").get<std::string>();
     std::string action = payload.at("action").get<std::string>();
     int amount = payload.at("amount").get<int>();
-    
+
     // Security hardening: validate action and amount
     if (action != "fold" && action != "call" && action != "raise") {
         nlohmann::json error = {

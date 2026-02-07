@@ -3,13 +3,16 @@
 #include "../core/hand.hpp"
 #include "../core/pot.hpp"
 #include "player_action.hpp"
+#include "../common/constants.hpp"
+#include "../common/uuid.hpp"
 #include <stdexcept>
 #include <algorithm>
 #include <cstdlib>
 #include <memory>
+#include <chrono>
 
 TableManager::TableManager() {
-    table_.id = "single_table"; // TODO: generate UUID
+    table_.id = common::uuid::generate();
     table_.seat_1 = nullptr;
     table_.seat_2 = nullptr;
     table_.current_hand = nullptr;
@@ -75,7 +78,7 @@ bool TableManager::startHand() {
 
     // Create new hand
     Hand hand;
-    hand.id = "hand_" + std::to_string(std::rand()); // TODO: UUID
+    hand.id = "hand_" + common::uuid::generate();
     hand.table = &table_;
     hand.players = {table_.seat_1, table_.seat_2};
     hand.deck = Deck();
@@ -87,7 +90,7 @@ bool TableManager::startHand() {
     // Determine dealer position (use table_.dealer_button_position)
     // For now, set current player to act as the small blind (seat after dealer)
     hand.current_player_to_act = (table_.dealer_button_position == 0) ? table_.seat_2 : table_.seat_1;
-    hand.min_raise = 4; // big blind
+    hand.min_raise = common::constants::BIG_BLIND;
     hand.history.clear();
     hand.winners.clear();
     hand.completed_at = 0;
@@ -132,8 +135,8 @@ void TableManager::endHand() {
     // Update table pot to zero (already zero after distribution)
     table_.pot = hand->pot;
 
-    // Set completion timestamp (placeholder)
-    hand->completed_at = 1; // TODO: real timestamp
+    // Set completion timestamp
+    hand->completed_at = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
     // Clear current hand
     current_hand_.reset();
