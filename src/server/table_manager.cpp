@@ -132,7 +132,7 @@ void TableManager::endHand() {
         player->topUp();
     }
 
-    // Update table pot to zero (already zero after distribution)
+    // Update table pot (should be zero after distribution)
     table_.pot = hand->pot;
 
     // Set completion timestamp
@@ -200,11 +200,13 @@ void TableManager::dealCommunityCards() {
     }
 
     for (int i = 0; i < count; ++i) {
-        if (hand->deck.size() > 0) {
-            Card card = hand->deck.deal();
-            hand->community_cards.push_back(card);
-            table_.community_cards.push_back(card);
+        if (hand->deck.size() == 0) {
+            common::log::log(common::log::Level::ERROR, "Deck exhausted while dealing community cards");
+            return;
         }
+        Card card = hand->deck.deal();
+        hand->community_cards.push_back(card);
+        table_.community_cards.push_back(card);
     }
 }
 

@@ -215,10 +215,6 @@ void WebSocketSession::on_pong(beast::error_code ec)
         return;
     }
 
-    // Cancel pong timeout timer
-    pong_timeout_timer_.cancel();
-    pong_pending_ = false;
-
     // Schedule next ping
     start_ping_timer();
 }

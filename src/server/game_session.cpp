@@ -181,7 +181,7 @@ void GameSession::sendActionRequest(const std::string& player_id)
     nlohmann::json possible_actions = nlohmann::json::array({"fold", "call", "raise"});
 
     // Calculate call amount (amount needed to call current bet)
-    // For now, assume call amount is big blind
+    // In a real implementation, this would be based on the highest bet in the current round
     int call_amount = common::constants::BIG_BLIND;
 
     // Get min raise from hand
@@ -280,8 +280,8 @@ void GameSession::broadcastHandCompleted()
 
     // Prepare winners array and pot distribution
     if (!win_players.empty() && total_pot > 0) {
-        int share = total_pot / win_players.size();
         int remainder = total_pot % win_players.size();
+        int share = (total_pot - remainder) / win_players.size();
         for (size_t i = 0; i < win_players.size(); ++i) {
             Player* winner = win_players[i];
             int amount = share + (i < static_cast<size_t>(remainder) ? 1 : 0);
@@ -414,11 +414,6 @@ std::string GameSession::generatePlayerId()
     return common::uuid::generate();
 }
 
-nlohmann::json GameSession::parseMessage(const std::string& message)
-{
-    return nlohmann::json::parse(message);
-}
-
 void GameSession::handleJoin(const nlohmann::json& payload, std::shared_ptr<WebSocketSession> session)
 {
     if (!session) {
@@ -447,7 +442,8 @@ void GameSession::handleJoin(const nlohmann::json& payload, std::shared_ptr<WebS
     if (!provided_player_id.empty())
     {
         auto player = table_manager_.getPlayer(provided_player_id);
-        if (player && player->connection_status == ConnectionStatus::DISCONNECTED)
+        if (player && (player->connection_status == ConnectionStatus::DISCONNECTED ||
+                       player->connection_status == ConnectionStatus::RECONNECTING))
         {
             {
                 std::lock_guard<std::mutex> lock(sessions_mutex_);

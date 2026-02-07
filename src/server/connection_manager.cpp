@@ -23,16 +23,6 @@ void ConnectionManager::startGraceTimer(const std::string& player_id, int grace_
         if (!ec)
         {
             on_expiry(player_id);
-            std::lock_guard<std::mutex> lock(timers_mutex_);
-            auto it = timers_.find(player_id);
-            if (it != timers_.end())
-            {
-                it->second.grace_timer.reset();
-                if (!it->second.removal_timer)
-                {
-                    timers_.erase(it);
-                }
-            }
         }
     });
 }

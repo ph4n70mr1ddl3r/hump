@@ -7,7 +7,10 @@
 namespace player_action {
 
 bool validateAction(const Hand& hand, const Player& player, const std::string& action, int amount) {
-    // Basic validation
+    if (!canAct(hand, player)) {
+        return false;
+    }
+
     if (action != "fold" && action != "call" && action != "raise") {
         return false;
     }
@@ -27,7 +30,7 @@ bool validateAction(const Hand& hand, const Player& player, const std::string& a
         }
     }
 
-    // Player must be current player to act (simplified)
+    // Player must be current player to act
     if (hand.current_player_to_act != &player) {
         return false;
     }
@@ -40,8 +43,13 @@ bool applyAction(Hand& hand, Player& player, const std::string& action, int amou
     }
 
     if (action == "fold") {
-        // Mark player folded (remove from active players)
-        // For now, do nothing
+        for (size_t i = 0; i < hand.players.size(); ++i) {
+            if (hand.players[i] == &player) {
+                if (hand.folded.size() <= i) hand.folded.resize(i + 1, false);
+                hand.folded[i] = true;
+                break;
+            }
+        }
     } else if (action == "call") {
         player.stack -= amount;
         hand.pot += amount;
@@ -87,9 +95,21 @@ bool applyAction(Hand& hand, Player& player, const std::string& action, int amou
 }
 
 bool canAct(const Hand& hand, const Player& player) {
-    // Check if player is still in hand (not folded) and connected
-    // Simplified: always true
-    return true;
+    if (player.connection_status != ConnectionStatus::CONNECTED) {
+        return false;
+    }
+    if (player.is_sitting_out) {
+        return false;
+    }
+    for (size_t i = 0; i < hand.players.size(); ++i) {
+        if (hand.players[i] == &player) {
+            if (i < hand.folded.size() && hand.folded[i]) {
+                return false;
+            }
+            return true;
+        }
+    }
+    return false;
 }
 
 int getMinRaise(const Hand& hand) {

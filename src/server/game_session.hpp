@@ -65,9 +65,6 @@ private:
     // Generate a unique player ID for new connections
     std::string generatePlayerId();
 
-    // Parse and validate incoming JSON message
-    nlohmann::json parseMessage(const std::string& message);
-
     // Handle specific message types
     void handleJoin(const nlohmann::json& payload, std::shared_ptr<WebSocketSession> session);
     void handleAction(const nlohmann::json& payload, std::shared_ptr<WebSocketSession> session);
