@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../card.hpp"
+#include "../../common/constants.hpp"
 #include <string>
 #include <vector>
 #include <cstdint>
@@ -19,7 +20,7 @@ struct Player {
     std::string id; // UUID
     std::string name; // optional display name
     int stack; // current chip count
-    int seat; // which seat at the table (0 or 1)
+    int seat; // which seat at the table
     std::vector<Card> hole_cards; // exactly 2 cards when in a hand
     ConnectionStatus connection_status;
     uint64_t last_action_timestamp; // milliseconds since epoch
@@ -29,7 +30,7 @@ struct Player {
     // Validation helper
     bool isValid() const {
         return stack >= 0 &&
-               (seat == 0 || seat == 1) &&
+               (seat == common::constants::SEAT_1 || seat == common::constants::SEAT_2) &&
                (hole_cards.size() == 0 || hole_cards.size() == 2);
     }
 

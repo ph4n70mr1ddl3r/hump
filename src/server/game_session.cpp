@@ -26,7 +26,7 @@ GameSession::GameSession(boost::asio::io_context& ioc, int action_timeout_ms, in
 
 nlohmann::json GameSession::createErrorResponse(const std::string& code, const std::string& message) const
 {
-    common::log::log(common::log::Level::WARN, "Error response: " + code + " - " + message);
+    common::log::log(common::log::Level::WARN, "Error response: " + code + " - " + message + " (current hand: " + (table_manager_.getCurrentHand() ? table_manager_.getCurrentHand()->id : "none") + ")");
     return {
         {"type", "error"},
         {"payload", {
@@ -110,7 +110,7 @@ void GameSession::sendWelcome(std::shared_ptr<WebSocketSession> session)
                 {"current_hand", nullptr},
                 {"pot", 0},
                 {"community_cards", nlohmann::json::array()},
-                {"dealer_button_position", 0}
+                {"dealer_button_position", common::constants::DEFAULT_DEALER_POSITION}
             }}
         }}
     };
@@ -120,14 +120,20 @@ void GameSession::sendWelcome(std::shared_ptr<WebSocketSession> session)
 void GameSession::broadcastHandStarted()
 {
     const Hand* hand = table_manager_.getCurrentHand();
-    if (!hand) return;
+    if (!hand) {
+        common::log::log(common::log::Level::ERROR, "broadcastHandStarted: no current hand");
+        return;
+    }
 
     const Table& table = table_manager_.getTable();
 
     nlohmann::json players_array = nlohmann::json::array();
     for (Player* player : hand->players)
     {
-        if (!player) continue;
+        if (!player) {
+            common::log::log(common::log::Level::WARN, "broadcastHandStarted: null player in hand->players");
+            continue;
+        }
         nlohmann::json player_json;
         player_json["player_id"] = player->id;
         player_json["stack"] = player->stack;
@@ -173,17 +179,39 @@ void GameSession::broadcastHandStarted()
 void GameSession::sendActionRequest(const std::string& player_id)
 {
     const Hand* hand = table_manager_.getCurrentHand();
-    if (!hand) return;
+    if (!hand) {
+        common::log::log(common::log::Level::ERROR, "sendActionRequest: no current hand");
+        return;
+    }
 
     auto player = table_manager_.getPlayer(player_id);
-    if (!player) return;
+    if (!player) {
+        common::log::log(common::log::Level::ERROR, "sendActionRequest: player not found: " + player_id);
+        return;
+    }
 
     // Determine possible actions (simplified - should check actual betting state)
     nlohmann::json possible_actions = nlohmann::json::array({"fold", "call", "raise"});
 
-    // Calculate call amount (amount needed to call current bet)
-    // TODO: Implement proper betting round state tracking for accurate call/raise amounts
-    int call_amount = common::constants::BIG_BLIND;
+    // Calculate call amount: amount needed to match the highest bet
+    int call_amount = 0;
+    int max_bet = 0;
+    int player_bet = 0;
+
+    // Find the highest bet in the current round
+    for (size_t i = 0; i < hand->players.size(); ++i) {
+        if (i < hand->player_bets.size()) {
+            if (hand->player_bets[i] > max_bet) {
+                max_bet = hand->player_bets[i];
+            }
+            if (hand->players[i] && hand->players[i]->id == player_id) {
+                player_bet = hand->player_bets[i];
+            }
+        }
+    }
+
+    // Call amount is the difference between max bet and player's current bet
+    call_amount = max_bet - player_bet;
 
     // Get min raise from hand
     int min_raise = hand->min_raise;
@@ -227,11 +255,17 @@ void GameSession::sendActionRequest(const std::string& player_id)
 void GameSession::broadcastActionApplied(const std::string& player_id, const std::string& action, int amount)
 {
     const Hand* hand = table_manager_.getCurrentHand();
-    if (!hand) return;
+    if (!hand) {
+        common::log::log(common::log::Level::ERROR, "broadcastActionApplied: no current hand");
+        return;
+    }
 
     // Find player
     auto player = table_manager_.getPlayer(player_id);
-    if (!player) return;
+    if (!player) {
+        common::log::log(common::log::Level::ERROR, "broadcastActionApplied: player not found: " + player_id);
+        return;
+    }
 
     // Determine next player to act
     std::string next_player_id = "";
@@ -261,7 +295,10 @@ void GameSession::broadcastActionApplied(const std::string& player_id, const std
 void GameSession::broadcastHandCompleted()
 {
     const Hand* hand = table_manager_.getCurrentHand();
-    if (!hand) return;
+    if (!hand) {
+        common::log::log(common::log::Level::ERROR, "broadcastHandCompleted: no current hand");
+        return;
+    }
 
     nlohmann::json winners = nlohmann::json::array();
     nlohmann::json pot_distribution = nlohmann::json::array();
@@ -285,6 +322,10 @@ void GameSession::broadcastHandCompleted()
         int share = (total_pot - remainder) / win_players.size();
         for (size_t i = 0; i < win_players.size(); ++i) {
             Player* winner = win_players[i];
+            if (!winner) {
+                common::log::log(common::log::Level::WARN, "broadcastHandCompleted: null winner in win_players");
+                continue;
+            }
             int amount = share + (i < static_cast<size_t>(remainder) ? 1 : 0);
             // Winner entry
             nlohmann::json winner_json = {
@@ -307,6 +348,8 @@ void GameSession::broadcastHandCompleted()
     for (Player* player : hand->players) {
         if (player) {
             updated_stacks[player->id] = player->stack;
+        } else {
+            common::log::log(common::log::Level::WARN, "broadcastHandCompleted: null player in hand->players");
         }
     }
 
@@ -396,7 +439,7 @@ void GameSession::onDisconnect(std::shared_ptr<WebSocketSession> session)
         return;
     }
 
-    common::log::log(common::log::Level::INFO, "Player disconnected: " + player_id);
+    common::log::log(common::log::Level::INFO, "Player disconnected: " + player_id + " (seat: " + std::to_string(player->seat) + " stack: " + std::to_string(player->stack) + ")");
     player_state_manager_.onDisconnect(*player);
 
     nlohmann::json payload = {
@@ -446,6 +489,11 @@ void GameSession::handleJoin(const nlohmann::json& payload, std::shared_ptr<WebS
         if (player && (player->connection_status == ConnectionStatus::DISCONNECTED ||
                        player->connection_status == ConnectionStatus::RECONNECTING))
         {
+            if (!player) {
+                common::log::log(common::log::Level::ERROR, "handleJoin: player became null during reconnection check");
+                sendJson(session, createErrorResponse("internal_error", "Player not available"));
+                return;
+            }
             {
                 std::lock_guard<std::mutex> lock(sessions_mutex_);
                 auto existing_session_it = player_sessions_.find(provided_player_id);
@@ -525,11 +573,11 @@ void GameSession::handleJoin(const nlohmann::json& payload, std::shared_ptr<WebS
     int seat = -1;
     if (table.seat_1 == nullptr)
     {
-        seat = 0;
+        seat = common::constants::SEAT_1;
     }
     else if (table.seat_2 == nullptr)
     {
-        seat = 1;
+        seat = common::constants::SEAT_2;
     }
     else
     {
@@ -629,12 +677,12 @@ void GameSession::handleAction(const nlohmann::json& payload, std::shared_ptr<We
     bool success = table_manager_.processPlayerAction(player_id, action, amount);
     if (!success)
     {
-        common::log::log(common::log::Level::WARN, "Invalid action: " + action + " by player: " + player_id);
+        common::log::log(common::log::Level::WARN, "Invalid action: " + action + " by player: " + player_id + " amount: " + std::to_string(amount));
         sendJson(session, createErrorResponse("invalid_action", "Action not allowed"));
         return;
     }
 
-    common::log::log(common::log::Level::INFO, "Action processed: " + action + " by player: " + player_id + " amount: " + std::to_string(amount));
+    common::log::log(common::log::Level::INFO, "Action processed: " + action + " by player: " + player_id + " amount: " + std::to_string(amount) + " hand_id: " + hand_id);
 
     // Action succeeded, broadcast action_applied
     broadcastActionApplied(player_id, action, amount);

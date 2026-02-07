@@ -18,15 +18,15 @@ TableManager::TableManager() {
     table_.current_hand = nullptr;
     table_.pot = 0;
     table_.community_cards.clear();
-    table_.dealer_button_position = 0;
+    table_.dealer_button_position = common::constants::DEFAULT_DEALER_POSITION;
     table_.state = TableState::WAITING_FOR_PLAYERS;
 }
 
 bool TableManager::assignSeat(std::shared_ptr<Player> player, int seat) {
-    if (seat != 0 && seat != 1) {
+    if (seat != common::constants::SEAT_1 && seat != common::constants::SEAT_2) {
         return false;
     }
-    Player** target_seat = (seat == 0) ? &table_.seat_1 : &table_.seat_2;
+    Player** target_seat = (seat == common::constants::SEAT_1) ? &table_.seat_1 : &table_.seat_2;
     if (*target_seat != nullptr) {
         return false; // seat already occupied
     }
@@ -147,7 +147,7 @@ void TableManager::endHand() {
     table_.state = TableState::WAITING_FOR_PLAYERS;
     table_.community_cards.clear();
     // Rotate dealer button
-    table_.dealer_button_position = (table_.dealer_button_position + 1) % 2;
+    table_.dealer_button_position = (table_.dealer_button_position + 1) % (common::constants::SEAT_2 + 1);
 }
 
 bool TableManager::processPlayerAction(const std::string& player_id, const std::string& action, int amount) {

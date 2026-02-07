@@ -53,12 +53,19 @@ bool applyAction(Hand& hand, Player* player, const std::string& action, int amou
         return false;
     }
 
+    // Ensure folded and player_bets vectors are properly sized
+    if (hand.folded.size() != hand.players.size()) {
+        hand.folded.resize(hand.players.size(), false);
+    }
+    if (hand.player_bets.size() != hand.players.size()) {
+        hand.player_bets.resize(hand.players.size(), 0);
+    }
+
     // Simplified validation
     if (action == "fold") {
         // Mark player folded
         for (size_t i = 0; i < hand.players.size(); ++i) {
             if (hand.players[i] == player) {
-                if (hand.folded.size() <= i) hand.folded.resize(i + 1, false);
                 hand.folded[i] = true;
                 break;
             }
@@ -71,7 +78,6 @@ bool applyAction(Hand& hand, Player* player, const std::string& action, int amou
         // Update player's total bet amount
         for (size_t i = 0; i < hand.players.size(); ++i) {
             if (hand.players[i] == player) {
-                if (hand.player_bets.size() <= i) hand.player_bets.resize(i + 1, 0);
                 hand.player_bets[i] += amount;
                 break;
             }
@@ -85,7 +91,6 @@ bool applyAction(Hand& hand, Player* player, const std::string& action, int amou
         // Update player's total bet amount
         for (size_t i = 0; i < hand.players.size(); ++i) {
             if (hand.players[i] == player) {
-                if (hand.player_bets.size() <= i) hand.player_bets.resize(i + 1, 0);
                 hand.player_bets[i] += amount;
                 break;
             }
@@ -137,9 +142,13 @@ bool isHandComplete(const Hand& hand) {
     if (hand.current_betting_round == BettingRound::SHOWDOWN) {
         return true;
     }
+    // Ensure folded vector is properly sized
+    size_t folded_size = hand.folded.size();
+    if (folded_size != hand.players.size()) {
+        folded_size = hand.players.size();
+    }
     // Count players who haven't folded
     int active_players = 0;
-    size_t folded_size = hand.folded.size();
     for (size_t i = 0; i < hand.players.size(); ++i) {
         if (i >= folded_size || !hand.folded[i]) {
             active_players++;
