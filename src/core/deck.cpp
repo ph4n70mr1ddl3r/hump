@@ -25,8 +25,8 @@ Deck::Deck() : cards_(createStandardDeck()), next_card_(0) {
 }
 
 void Deck::shuffle() {
-    static std::random_device rd;
-    static std::mt19937 g(rd());
+    thread_local std::random_device rd;
+    thread_local std::mt19937 g(rd());
 
     std::shuffle(cards_.begin(), cards_.end(), g);
     next_card_ = 0;

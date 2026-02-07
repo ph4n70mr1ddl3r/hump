@@ -17,6 +17,7 @@ class GameSession; // forward declaration
 class WebSocketSession : public std::enable_shared_from_this<WebSocketSession> {
 public:
     explicit WebSocketSession(tcp::socket socket);
+    ~WebSocketSession();
     void start();
 
     // Send a text message to the client

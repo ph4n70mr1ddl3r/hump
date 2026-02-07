@@ -11,6 +11,13 @@ WebSocketSession::WebSocketSession(tcp::socket socket)
 {
 }
 
+WebSocketSession::~WebSocketSession()
+{
+    boost::system::error_code ec;
+    ping_timer_.cancel(ec);
+    pong_timeout_timer_.cancel(ec);
+}
+
 void WebSocketSession::setGameSession(std::shared_ptr<GameSession> game_session)
 {
     game_session_ = game_session;

@@ -41,7 +41,14 @@ void Client::run()
         std::string welcome_msg = beast::buffers_to_string(buffer.data());
         buffer.consume(buffer.size());
 
-        nlohmann::json welcome_json = nlohmann::json::parse(welcome_msg);
+        nlohmann::json welcome_json;
+        try {
+            welcome_json = nlohmann::json::parse(welcome_msg);
+        }
+        catch (const nlohmann::json::parse_error& e) {
+            std::cerr << "Failed to parse welcome message: " << e.what() << std::endl;
+            return;
+        }
         if (!welcome_json.contains("type") || welcome_json.at("type") != "welcome")
         {
             std::cerr << "Expected welcome message, got: " << welcome_msg << std::endl;
@@ -70,7 +77,14 @@ void Client::run()
         std::string join_ack_msg = beast::buffers_to_string(buffer.data());
         buffer.consume(buffer.size());
 
-        nlohmann::json join_ack_json = nlohmann::json::parse(join_ack_msg);
+        nlohmann::json join_ack_json;
+        try {
+            join_ack_json = nlohmann::json::parse(join_ack_msg);
+        }
+        catch (const nlohmann::json::parse_error& e) {
+            std::cerr << "Failed to parse join_ack message: " << e.what() << std::endl;
+            return;
+        }
         if (!join_ack_json.contains("type") || join_ack_json.at("type") != "join_ack")
         {
             std::cerr << "Expected join_ack, got: " << join_ack_msg << std::endl;
@@ -91,7 +105,18 @@ void Client::run()
             std::string msg = beast::buffers_to_string(buffer.data());
             buffer.consume(buffer.size());
 
-            nlohmann::json json = nlohmann::json::parse(msg);
+            nlohmann::json json;
+            try {
+                json = nlohmann::json::parse(msg);
+            }
+            catch (const nlohmann::json::parse_error& e) {
+                std::cerr << "Failed to parse message: " << e.what() << std::endl;
+                break;
+            }
+            if (!json.contains("type")) {
+                std::cerr << "Message missing 'type' field: " << msg << std::endl;
+                break;
+            }
             std::string type = json.at("type").get<std::string>();
 
             if (type == "hand_started")
