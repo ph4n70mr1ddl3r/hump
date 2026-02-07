@@ -16,37 +16,41 @@ GameSession::GameSession(boost::asio::io_context& ioc, int action_timeout_ms, in
       ioc_(ioc),
       connection_manager_(ioc),
       player_state_manager_(connection_manager_, table_manager_, disconnect_grace_time_ms, removal_timeout_ms,
-          [this](const std::string& player_id) {
-              broadcastPlayerRemoved(player_id);
+          [self = shared_from_this()](const std::string& player_id) {
+              if (self) {
+                  self->broadcastPlayerRemoved(player_id);
+              }
           })
 {
 }
 
+nlohmann::json GameSession::createErrorResponse(const std::string& code, const std::string& message) const
+{
+    return {
+        {"type", "error"},
+        {"payload", {
+            {"code", code},
+            {"message", message}
+        }}
+    };
+}
+
 void GameSession::handleMessage(const std::string& message, std::shared_ptr<WebSocketSession> session)
 {
+    if (!session) {
+        common::log::log(common::log::Level::ERROR, "handleMessage: null session");
+        return;
+    }
+
     try
     {
         nlohmann::json json = nlohmann::json::parse(message);
         if (!json.contains("type")) {
-            nlohmann::json error = {
-                {"type", "error"},
-                {"payload", {
-                    {"code", "invalid_json"},
-                    {"message", "Missing 'type' field"}
-                }}
-            };
-            sendJson(session, error);
+            sendJson(session, createErrorResponse("invalid_json", "Missing 'type' field"));
             return;
         }
         if (!json.contains("payload")) {
-            nlohmann::json error = {
-                {"type", "error"},
-                {"payload", {
-                    {"code", "invalid_json"},
-                    {"message", "Missing 'payload' field"}
-                }}
-            };
-            sendJson(session, error);
+            sendJson(session, createErrorResponse("invalid_json", "Missing 'payload' field"));
             return;
         }
         std::string type = json.at("type").get<std::string>();
@@ -69,45 +73,31 @@ void GameSession::handleMessage(const std::string& message, std::shared_ptr<WebS
         }
         else
         {
-            // Unknown type, send error
-            nlohmann::json error = {
-                {"type", "error"},
-                {"payload", {
-                    {"code", "invalid_message_type"},
-                    {"message", "Unknown message type"}
-                }}
-            };
-            sendJson(session, error);
+            sendJson(session, createErrorResponse("invalid_message_type", "Unknown message type"));
         }
     }
     catch (const nlohmann::json::exception& e)
     {
-        nlohmann::json error = {
-            {"type", "error"},
-            {"payload", {
-                {"code", "invalid_json"},
-                {"message", "Failed to parse JSON"}
-            }}
-        };
-        sendJson(session, error);
+        sendJson(session, createErrorResponse("invalid_json", "Failed to parse JSON"));
     }
     catch (const std::exception& e)
     {
-        nlohmann::json error = {
-            {"type", "error"},
-            {"payload", {
-                {"code", "internal_error"},
-                {"message", "Internal server error"}
-            }}
-        };
-        sendJson(session, error);
+        common::log::log(common::log::Level::ERROR, "handleMessage exception: " + std::string(e.what()));
+        sendJson(session, createErrorResponse("internal_error", "Internal server error"));
     }
 }
 
 void GameSession::sendWelcome(std::shared_ptr<WebSocketSession> session)
 {
+    if (!session) {
+        common::log::log(common::log::Level::ERROR, "sendWelcome: null session");
+        return;
+    }
+
     std::string player_id = generatePlayerId();
     registerSession(player_id, session);
+
+    common::log::log(common::log::Level::INFO, "Welcome sent to player_id: " + player_id);
 
     nlohmann::json welcome = {
         {"type", "welcome"},
@@ -218,10 +208,18 @@ void GameSession::sendActionRequest(const std::string& player_id)
     };
 
     // Send to specific player
-    auto session_it = player_sessions_.find(player_id);
-    if (session_it != player_sessions_.end())
+    std::shared_ptr<WebSocketSession> session;
     {
-        sendJson(session_it->second, message);
+        std::lock_guard<std::mutex> lock(sessions_mutex_);
+        auto session_it = player_sessions_.find(player_id);
+        if (session_it != player_sessions_.end())
+        {
+            session = session_it->second;
+        }
+    }
+    if (session)
+    {
+        sendJson(session, message);
     }
 }
 
@@ -355,12 +353,14 @@ void GameSession::broadcastPlayerReconnected(const std::string& player_id)
 
 void GameSession::registerSession(const std::string& player_id, std::shared_ptr<WebSocketSession> session)
 {
+    std::lock_guard<std::mutex> lock(sessions_mutex_);
     player_sessions_[player_id] = session;
     session_to_player_[session] = player_id;
 }
 
 void GameSession::removeSession(const std::string& player_id)
 {
+    std::lock_guard<std::mutex> lock(sessions_mutex_);
     auto it = player_sessions_.find(player_id);
     if (it != player_sessions_.end())
     {
@@ -371,28 +371,33 @@ void GameSession::removeSession(const std::string& player_id)
 
 void GameSession::onDisconnect(std::shared_ptr<WebSocketSession> session)
 {
-    // Find player_id associated with this session
-    auto it = session_to_player_.find(session);
-    if (it == session_to_player_.end())
-    {
-        return; // No player registered for this session
+    if (!session) {
+        common::log::log(common::log::Level::ERROR, "onDisconnect: null session");
+        return;
     }
-    std::string player_id = it->second;
 
-    // Remove session mapping (session is dead)
+    std::string player_id;
+    {
+        std::lock_guard<std::mutex> lock(sessions_mutex_);
+        auto it = session_to_player_.find(session);
+        if (it == session_to_player_.end())
+        {
+            return;
+        }
+        player_id = it->second;
+    }
+
     removeSession(player_id);
 
-    // Get player from table
     auto player = table_manager_.getPlayer(player_id);
     if (!player)
     {
-        return; // Player not seated
+        return;
     }
 
-    // Notify player state manager
+    common::log::log(common::log::Level::INFO, "Player disconnected: " + player_id);
     player_state_manager_.onDisconnect(*player);
 
-    // Broadcast player_disconnected message
     nlohmann::json payload = {
         {"player_id", player_id},
         {"remaining_grace_time_ms", disconnect_grace_time_ms_}
@@ -416,28 +421,18 @@ nlohmann::json GameSession::parseMessage(const std::string& message)
 
 void GameSession::handleJoin(const nlohmann::json& payload, std::shared_ptr<WebSocketSession> session)
 {
+    if (!session) {
+        common::log::log(common::log::Level::ERROR, "handleJoin: null session");
+        return;
+    }
+
     if (!payload.contains("name")) {
-        nlohmann::json error = {
-            {"type", "error"},
-            {"payload", {
-                {"code", "invalid_input"},
-                {"message", "Missing 'name' field"}
-            }}
-        };
-        sendJson(session, error);
+        sendJson(session, createErrorResponse("invalid_input", "Missing 'name' field"));
         return;
     }
     std::string name = payload.at("name").get<std::string>();
-    // Security hardening: validate name is non-empty
     if (name.empty()) {
-        nlohmann::json error = {
-            {"type", "error"},
-            {"payload", {
-                {"code", "invalid_input"},
-                {"message", "Player name cannot be empty"}
-            }}
-        };
-        sendJson(session, error);
+        sendJson(session, createErrorResponse("invalid_input", "Player name cannot be empty"));
         return;
     }
 
@@ -454,38 +449,33 @@ void GameSession::handleJoin(const nlohmann::json& payload, std::shared_ptr<WebS
         auto player = table_manager_.getPlayer(provided_player_id);
         if (player && player->connection_status == ConnectionStatus::DISCONNECTED)
         {
-            // Check if another session already has this player (should not happen)
-            auto existing_session_it = player_sessions_.find(provided_player_id);
-            if (existing_session_it != player_sessions_.end() && existing_session_it->second != session)
             {
-                // Another session already owns this player, reject
-                nlohmann::json error = {
-                    {"type", "error"},
-                    {"payload", {
-                        {"code", "player_already_connected"},
-                        {"message", "Player already connected with another session"}
-                    }}
-                };
-                sendJson(session, error);
-                return;
-            }
+                std::lock_guard<std::mutex> lock(sessions_mutex_);
+                auto existing_session_it = player_sessions_.find(provided_player_id);
+                if (existing_session_it != player_sessions_.end() && existing_session_it->second != session)
+                {
+                    sendJson(session, createErrorResponse("player_already_connected", "Player already connected with another session"));
+                    return;
+                }
 
-            // Update session mappings
-            auto current_it = session_to_player_.find(session);
-            if (current_it != session_to_player_.end())
-            {
-                std::string old_player_id = current_it->second;
-                player_sessions_.erase(old_player_id);
-                session_to_player_.erase(current_it);
+                auto current_it = session_to_player_.find(session);
+                if (current_it != session_to_player_.end())
+                {
+                    std::string old_player_id = current_it->second;
+                    player_sessions_.erase(old_player_id);
+                    session_to_player_.erase(current_it);
+                }
+                player_sessions_[provided_player_id] = session;
+                session_to_player_[session] = provided_player_id;
             }
-            player_sessions_[provided_player_id] = session;
-            session_to_player_[session] = provided_player_id;
 
             // Cancel any disconnection timers
             connection_manager_.cancelTimers(provided_player_id);
 
             // Update player state
             player_state_manager_.onReconnect(*player);
+
+            common::log::log(common::log::Level::INFO, "Player reconnected: " + provided_player_id);
 
             // Broadcast reconnection
             broadcastPlayerReconnected(provided_player_id);
@@ -505,20 +495,17 @@ void GameSession::handleJoin(const nlohmann::json& payload, std::shared_ptr<WebS
     }
 
     // Get player_id from session mapping (default welcome-assigned)
-    auto it = session_to_player_.find(session);
-    if (it == session_to_player_.end())
+    std::string player_id;
     {
-        nlohmann::json error = {
-            {"type", "error"},
-            {"payload", {
-                {"code", "unauthorized"},
-                {"message", "Player not registered"}
-            }}
-        };
-        sendJson(session, error);
-        return;
+        std::lock_guard<std::mutex> lock(sessions_mutex_);
+        auto it = session_to_player_.find(session);
+        if (it == session_to_player_.end())
+        {
+            sendJson(session, createErrorResponse("unauthorized", "Player not registered"));
+            return;
+        }
+        player_id = it->second;
     }
-    std::string player_id = it->second;
 
     // Check if player already seated
     auto existing_player = table_manager_.getPlayer(player_id);
@@ -549,15 +536,7 @@ void GameSession::handleJoin(const nlohmann::json& payload, std::shared_ptr<WebS
     }
     else
     {
-        // Both seats occupied
-        nlohmann::json error = {
-            {"type", "error"},
-            {"payload", {
-                {"code", "table_full"},
-                {"message", "No empty seats available"}
-            }}
-        };
-        sendJson(session, error);
+        sendJson(session, createErrorResponse("table_full", "No empty seats available"));
         return;
     }
 
@@ -573,18 +552,13 @@ void GameSession::handleJoin(const nlohmann::json& payload, std::shared_ptr<WebS
     player->disconnected_at = std::nullopt;
     player->is_sitting_out = false;
 
+    common::log::log(common::log::Level::INFO, "New player joined: " + name + " (player_id: " + player_id + ")");
+
     // Assign seat
     bool success = table_manager_.assignSeat(player, seat);
     if (!success)
     {
-        nlohmann::json error = {
-            {"type", "error"},
-            {"payload", {
-                {"code", "seat_unavailable"},
-                {"message", "Seat assignment failed"}
-            }}
-        };
-        sendJson(session, error);
+        sendJson(session, createErrorResponse("seat_unavailable", "Seat assignment failed"));
         return;
     }
 
@@ -603,6 +577,7 @@ void GameSession::handleJoin(const nlohmann::json& payload, std::shared_ptr<WebS
     {
         if (table_manager_.startHand())
         {
+            common::log::log(common::log::Level::INFO, "Hand started with both players");
             broadcastHandStarted();
         }
     }
@@ -610,73 +585,46 @@ void GameSession::handleJoin(const nlohmann::json& payload, std::shared_ptr<WebS
 
 void GameSession::handleAction(const nlohmann::json& payload, std::shared_ptr<WebSocketSession> session)
 {
+    if (!session) {
+        common::log::log(common::log::Level::ERROR, "handleAction: null session");
+        return;
+    }
+
     if (!payload.contains("hand_id") || !payload.contains("action") || !payload.contains("amount")) {
-        nlohmann::json error = {
-            {"type", "error"},
-            {"payload", {
-                {"code", "invalid_input"},
-                {"message", "Missing required fields (hand_id, action, amount)"}
-            }}
-        };
-        sendJson(session, error);
+        sendJson(session, createErrorResponse("invalid_input", "Missing required fields (hand_id, action, amount)"));
         return;
     }
     std::string hand_id = payload.at("hand_id").get<std::string>();
     std::string action = payload.at("action").get<std::string>();
     int amount = payload.at("amount").get<int>();
 
-    // Security hardening: validate action and amount
     if (action != "fold" && action != "call" && action != "raise") {
-        nlohmann::json error = {
-            {"type", "error"},
-            {"payload", {
-                {"code", "invalid_action"},
-                {"message", "Action must be fold, call, or raise"}
-            }}
-        };
-        sendJson(session, error);
+        sendJson(session, createErrorResponse("invalid_action", "Action must be fold, call, or raise"));
         return;
     }
     if (amount < 0) {
-        nlohmann::json error = {
-            {"type", "error"},
-            {"payload", {
-                {"code", "invalid_amount"},
-                {"message", "Amount cannot be negative"}
-            }}
-        };
-        sendJson(session, error);
+        sendJson(session, createErrorResponse("invalid_amount", "Amount cannot be negative"));
         return;
     }
 
     // Get player_id from session
-    auto it = session_to_player_.find(session);
-    if (it == session_to_player_.end())
+    std::string player_id;
     {
-        nlohmann::json error = {
-            {"type", "error"},
-            {"payload", {
-                {"code", "unauthorized"},
-                {"message", "Player not registered"}
-            }}
-        };
-        sendJson(session, error);
-        return;
+        std::lock_guard<std::mutex> lock(sessions_mutex_);
+        auto it = session_to_player_.find(session);
+        if (it == session_to_player_.end())
+        {
+            sendJson(session, createErrorResponse("unauthorized", "Player not registered"));
+            return;
+        }
+        player_id = it->second;
     }
-    std::string player_id = it->second;
 
     // Validate hand_id matches current hand
     const Hand* current_hand = table_manager_.getCurrentHand();
     if (!current_hand || current_hand->id != hand_id)
     {
-        nlohmann::json error = {
-            {"type", "error"},
-            {"payload", {
-                {"code", "invalid_hand"},
-                {"message", "No active hand or hand mismatch"}
-            }}
-        };
-        sendJson(session, error);
+        sendJson(session, createErrorResponse("invalid_hand", "No active hand or hand mismatch"));
         return;
     }
 
@@ -684,16 +632,12 @@ void GameSession::handleAction(const nlohmann::json& payload, std::shared_ptr<We
     bool success = table_manager_.processPlayerAction(player_id, action, amount);
     if (!success)
     {
-        nlohmann::json error = {
-            {"type", "error"},
-            {"payload", {
-                {"code", "invalid_action"},
-                {"message", "Action not allowed"}
-            }}
-        };
-        sendJson(session, error);
+        common::log::log(common::log::Level::WARN, "Invalid action: " + action + " by player: " + player_id);
+        sendJson(session, createErrorResponse("invalid_action", "Action not allowed"));
         return;
     }
+
+    common::log::log(common::log::Level::INFO, "Action processed: " + action + " by player: " + player_id + " amount: " + std::to_string(amount));
 
     // Action succeeded, broadcast action_applied
     broadcastActionApplied(player_id, action, amount);
@@ -709,6 +653,7 @@ void GameSession::handleAction(const nlohmann::json& payload, std::shared_ptr<We
 
     // Check if hand is complete
     if (hand_after && poker::isHandComplete(*hand_after)) {
+        common::log::log(common::log::Level::INFO, "Hand completed: " + hand_after->id);
         broadcastHandCompleted();
         table_manager_.endHand();
     }
@@ -725,33 +670,28 @@ void GameSession::handlePing(const nlohmann::json& payload, std::shared_ptr<WebS
 
 void GameSession::handleTopUp(const nlohmann::json& payload, std::shared_ptr<WebSocketSession> session)
 {
-    // Get player_id from session
-    auto it = session_to_player_.find(session);
-    if (it == session_to_player_.end())
-    {
-        nlohmann::json error = {
-            {"type", "error"},
-            {"payload", {
-                {"code", "unauthorized"},
-                {"message", "Player not registered"}
-            }}
-        };
-        sendJson(session, error);
+    if (!session) {
+        common::log::log(common::log::Level::ERROR, "handleTopUp: null session");
         return;
     }
-    std::string player_id = it->second;
+
+    // Get player_id from session
+    std::string player_id;
+    {
+        std::lock_guard<std::mutex> lock(sessions_mutex_);
+        auto it = session_to_player_.find(session);
+        if (it == session_to_player_.end())
+        {
+            sendJson(session, createErrorResponse("unauthorized", "Player not registered"));
+            return;
+        }
+        player_id = it->second;
+    }
 
     auto player = table_manager_.getPlayer(player_id);
     if (!player)
     {
-        nlohmann::json error = {
-            {"type", "error"},
-            {"payload", {
-                {"code", "player_not_found"},
-                {"message", "Player not seated at table"}
-            }}
-        };
-        sendJson(session, error);
+        sendJson(session, createErrorResponse("player_not_found", "Player not seated at table"));
         return;
     }
 
@@ -777,8 +717,20 @@ void GameSession::sendJson(std::shared_ptr<WebSocketSession> session, const nloh
 void GameSession::broadcastJson(const nlohmann::json& json)
 {
     std::string message = json.dump();
-    for (const auto& pair : player_sessions_)
+    std::vector<std::shared_ptr<WebSocketSession>> sessions_copy;
     {
-        pair.second->send(message);
+        std::lock_guard<std::mutex> lock(sessions_mutex_);
+        sessions_copy.reserve(player_sessions_.size());
+        for (const auto& pair : player_sessions_)
+        {
+            sessions_copy.push_back(pair.second);
+        }
+    }
+    for (const auto& session : sessions_copy)
+    {
+        if (session)
+        {
+            session->send(message);
+        }
     }
 }

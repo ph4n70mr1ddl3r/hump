@@ -61,7 +61,6 @@ namespace json_serialization {
 void to_json(nlohmann::json& j, const WelcomeMessage& msg) {
     j = nlohmann::json::object();
     j["player_id"] = msg.player_id;
-    // TODO: add table object
 }
 
 void from_json(const nlohmann::json& j, WelcomeMessage& msg) {

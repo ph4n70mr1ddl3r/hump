@@ -33,6 +33,10 @@ void WebSocketSession::start()
 
 void WebSocketSession::send(const std::string& message)
 {
+    if (message.empty()) {
+        common::log::log(common::log::Level::WARN, "WebSocketSession::send: empty message");
+        return;
+    }
     net::post(ws_.get_executor(),
         [self = shared_from_this(), message]()
         {
@@ -91,7 +95,6 @@ void WebSocketSession::on_read(beast::error_code ec, std::size_t bytes_transferr
         {
             common::log::log(common::log::Level::ERROR, "WebSocket read error: " + ec.message());
         }
-        // Notify game session about disconnection
         if (auto game_session = game_session_.lock())
         {
             game_session->onDisconnect(shared_from_this());
@@ -99,14 +102,20 @@ void WebSocketSession::on_read(beast::error_code ec, std::size_t bytes_transferr
         return;
     }
 
-    // Forward message to game session
     if (auto game_session = game_session_.lock())
     {
-        std::string message = beast::buffers_to_string(buffer_.data());
-        game_session->handleMessage(message, shared_from_this());
+        try {
+            std::string message = beast::buffers_to_string(buffer_.data());
+            if (message.empty()) {
+                common::log::log(common::log::Level::WARN, "WebSocketSession::on_read: empty message");
+            } else {
+                game_session->handleMessage(message, shared_from_this());
+            }
+        } catch (const std::exception& e) {
+            common::log::log(common::log::Level::ERROR, "WebSocketSession::on_read exception: " + std::string(e.what()));
+        }
     }
 
-    // Clear buffer and read next message
     buffer_.consume(buffer_.size());
     do_read();
 }

@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <mutex>
 
 class ConnectionManager {
 public:
@@ -26,6 +27,7 @@ public:
 
 private:
     boost::asio::io_context& ioc_;
+    mutable std::mutex timers_mutex_;
 
     struct PlayerTimers {
         std::unique_ptr<boost::asio::steady_timer> grace_timer;

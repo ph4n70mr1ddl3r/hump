@@ -176,9 +176,47 @@ void TableManager::dealHoleCards() {
 }
 
 void TableManager::dealCommunityCards() {
-    // TODO: implement when advancing betting round
+    if (!table_.current_hand) {
+        return;
+    }
+
+    Hand* hand = table_.current_hand;
+    int count = 0;
+
+    switch (hand->current_betting_round) {
+        case BettingRound::PREFLOP:
+            count = 0;
+            break;
+        case BettingRound::FLOP:
+            count = 3;
+            break;
+        case BettingRound::TURN:
+        case BettingRound::RIVER:
+            count = 1;
+            break;
+        case BettingRound::SHOWDOWN:
+            count = 0;
+            break;
+    }
+
+    for (int i = 0; i < count; ++i) {
+        if (hand->deck.size() > 0) {
+            Card card = hand->deck.deal();
+            hand->community_cards.push_back(card);
+            table_.community_cards.push_back(card);
+        }
+    }
 }
 
 void TableManager::advanceBettingRound() {
-    // TODO: implement
+    if (!table_.current_hand) {
+        return;
+    }
+
+    Hand* hand = table_.current_hand;
+    bool advanced = hand->advanceRound();
+
+    if (advanced) {
+        dealCommunityCards();
+    }
 }

@@ -7,6 +7,7 @@ ConnectionManager::ConnectionManager(boost::asio::io_context& ioc)
 
 void ConnectionManager::startGraceTimer(const std::string& player_id, int grace_time_ms, TimerCallback on_expiry)
 {
+    std::lock_guard<std::mutex> lock(timers_mutex_);
     auto& timers = timers_[player_id];
     if (!timers.grace_timer)
     {
@@ -22,12 +23,11 @@ void ConnectionManager::startGraceTimer(const std::string& player_id, int grace_
         if (!ec)
         {
             on_expiry(player_id);
-            // After grace timer expires, we can remove the timer entry
+            std::lock_guard<std::mutex> lock(timers_mutex_);
             auto it = timers_.find(player_id);
             if (it != timers_.end())
             {
                 it->second.grace_timer.reset();
-                // If both timers are null, remove entry safely
                 if (!it->second.removal_timer)
                 {
                     timers_.erase(it);
@@ -39,6 +39,7 @@ void ConnectionManager::startGraceTimer(const std::string& player_id, int grace_
 
 void ConnectionManager::startRemovalTimer(const std::string& player_id, int removal_time_ms, TimerCallback on_expiry)
 {
+    std::lock_guard<std::mutex> lock(timers_mutex_);
     auto& timers = timers_[player_id];
     if (!timers.removal_timer)
     {
@@ -54,7 +55,7 @@ void ConnectionManager::startRemovalTimer(const std::string& player_id, int remo
         if (!ec)
         {
             on_expiry(player_id);
-            // After removal timer expires, remove entry
+            std::lock_guard<std::mutex> lock(timers_mutex_);
             timers_.erase(player_id);
         }
     });
@@ -62,6 +63,7 @@ void ConnectionManager::startRemovalTimer(const std::string& player_id, int remo
 
 void ConnectionManager::cancelTimers(const std::string& player_id)
 {
+    std::lock_guard<std::mutex> lock(timers_mutex_);
     auto it = timers_.find(player_id);
     if (it != timers_.end())
     {
@@ -79,6 +81,7 @@ void ConnectionManager::cancelTimers(const std::string& player_id)
 
 bool ConnectionManager::hasActiveTimers(const std::string& player_id) const
 {
+    std::lock_guard<std::mutex> lock(timers_mutex_);
     auto it = timers_.find(player_id);
     if (it == timers_.end())
     {

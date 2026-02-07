@@ -7,6 +7,7 @@
 #include "../common/json_serialization.hpp"
 #include <memory>
 #include <unordered_map>
+#include <mutex>
 #include <boost/asio.hpp>
 
 namespace beast = boost::beast;
@@ -47,6 +48,7 @@ public:
 
 private:
     TableManager table_manager_;
+    mutable std::mutex sessions_mutex_;
     std::unordered_map<std::string, std::shared_ptr<WebSocketSession>> player_sessions_;
     std::unordered_map<std::shared_ptr<WebSocketSession>, std::string> session_to_player_;
 
@@ -83,4 +85,6 @@ private:
 
     // Broadcast player_reconnected message
     void broadcastPlayerReconnected(const std::string& player_id);
+
+    nlohmann::json createErrorResponse(const std::string& code, const std::string& message) const;
 };
