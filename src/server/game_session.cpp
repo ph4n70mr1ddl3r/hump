@@ -231,26 +231,33 @@ void GameSession::sendActionRequest(const std::string& player_id)
     // Call amount is the difference between max bet and player's current bet
     call_amount = max_bet - player_bet;
 
-    // Fold is always available if it's their turn
-    possible_actions.push_back("fold");
+    // Fold is always available if it's their turn (unless heads-up and other player folded)
+    int active_players = 0;
+    for (size_t i = 0; i < hand->players.size(); ++i) {
+        if (hand->players[i] && i < hand->folded.size() && !hand->folded[i]) {
+            active_players++;
+        }
+    }
+    if (active_players > 1) {
+        possible_actions.push_back("fold");
+    }
 
     // Call is available if there's a bet to call and player has enough chips
     if (call_amount > 0 && player->stack >= call_amount) {
         possible_actions.push_back("call");
-    }
-
-    // Check if player can raise
-    int min_raise = hand->min_raise;
-    int max_raise = player->stack;
-    if (max_raise >= min_raise && max_raise > call_amount) {
-        possible_actions.push_back("raise");
+    } else if (call_amount == 0 && player->stack > 0) {
+        // Can check (call 0) when facing no bet
+        possible_actions.push_back("call");
     }
 
     // Get min raise from hand
-    min_raise = hand->min_raise;
-
-    // Max raise is player's stack
+    int min_raise = hand->min_raise;
     int max_raise = player->stack;
+
+    // Check if player can raise (must be at least min_raise and higher than call)
+    if (max_raise >= min_raise && max_raise > call_amount) {
+        possible_actions.push_back("raise");
+    }
 
     // Timeout (configurable, default 30 seconds)
     int timeout_ms = common::constants::ACTION_TIMEOUT_MS;
