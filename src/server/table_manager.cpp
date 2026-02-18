@@ -103,23 +103,38 @@ bool TableManager::startHand() {
     hand.player_bets.resize(hand.players.size(), 0);
     hand.folded.resize(hand.players.size(), false);
 
-    // Post blinds
+    // Post blinds - find indices for small blind and big blind players
     int small_blind_amount = common::constants::SMALL_BLIND;
     int big_blind_amount = common::constants::BIG_BLIND;
 
-    // Small blind (seat after dealer)
-    Player* small_blind_player = (table_.dealer_button_position == 0) ? table_.seat_1 : table_.seat_2;
-    Player* big_blind_player = (table_.dealer_button_position == 0) ? table_.seat_2 : table_.seat_1;
+    // Determine small blind and big blind player indices based on dealer position
+    // Dealer button position 0: seat_1 is dealer, seat_2 is small blind, seat_1 (actually seat_0) is big blind
+    // But we only have 2 seats (0 and 1), so:
+    // dealer=0: small blind is seat_1 (index 1), big blind is seat_0 (index 0)
+    // dealer=1: small blind is seat_0 (index 0), big blind is seat_1 (index 1)
+    size_t small_blind_idx = (table_.dealer_button_position == 0) ? 1 : 0;
+    size_t big_blind_idx = (table_.dealer_button_position == 0) ? 0 : 1;
 
-    if (small_blind_player && small_blind_player->stack >= small_blind_amount) {
-        small_blind_player->stack -= small_blind_amount;
-        hand.pot += small_blind_amount;
-        hand.player_bets[0] = small_blind_amount;
+    // Post small blind
+    if (small_blind_idx < hand.players.size() && hand.players[small_blind_idx]) {
+        Player* small_blind_player = hand.players[small_blind_idx];
+        int sb_amount = std::min(small_blind_player->stack, small_blind_amount);
+        if (sb_amount > 0) {
+            small_blind_player->stack -= sb_amount;
+            hand.pot += sb_amount;
+            hand.player_bets[small_blind_idx] = sb_amount;
+        }
     }
-    if (big_blind_player && big_blind_player->stack >= big_blind_amount) {
-        big_blind_player->stack -= big_blind_amount;
-        hand.pot += big_blind_amount;
-        hand.player_bets[1] = big_blind_amount;
+
+    // Post big blind
+    if (big_blind_idx < hand.players.size() && hand.players[big_blind_idx]) {
+        Player* big_blind_player = hand.players[big_blind_idx];
+        int bb_amount = std::min(big_blind_player->stack, big_blind_amount);
+        if (bb_amount > 0) {
+            big_blind_player->stack -= bb_amount;
+            hand.pot += bb_amount;
+            hand.player_bets[big_blind_idx] = bb_amount;
+        }
     }
 
     // Deal hole cards

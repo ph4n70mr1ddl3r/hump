@@ -169,7 +169,15 @@ void Client::run()
 
                 // Use random strategy to choose action
                 RandomStrategy strategy;
-                auto [action, amount] = strategy.chooseAction(actions, call_amount, min_raise, max_raise);
+                std::string action;
+                int amount;
+                try {
+                    std::tie(action, amount) = strategy.chooseAction(actions, call_amount, min_raise, max_raise);
+                } catch (const std::exception& e) {
+                    std::cerr << "Strategy error: " << e.what() << ", defaulting to fold" << std::endl;
+                    action = "fold";
+                    amount = 0;
+                }
 
                 // Add human-like delay before responding
                 delay::randomDelay();

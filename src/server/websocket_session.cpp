@@ -189,19 +189,32 @@ void WebSocketSession::on_ping_timer(beast::error_code ec)
         return;
     }
 
-    // Start pong timeout timer FIRST, then set flag
-    pong_timeout_timer_.expires_after(std::chrono::milliseconds(common::constants::PONG_TIMEOUT_MS));
-    pong_timeout_timer_.async_wait(
-        beast::bind_front_handler(
-            &WebSocketSession::on_pong_timeout,
-            shared_from_this()));
-    pong_pending_ = true;
-
-    // Send ping
+    // Send ping first, then start pong timeout timer after ping is sent
+    // This avoids race condition where pong_pending_ is set but ping fails
     ws_.async_ping("",
-        beast::bind_front_handler(
-            &WebSocketSession::on_pong,
-            shared_from_this()));
+        [self = shared_from_this()](beast::error_code ping_ec)
+        {
+            if (ping_ec)
+            {
+                // Ping failed, treat as disconnect
+                if (auto game_session = self->game_session_.lock())
+                {
+                    game_session->onDisconnect(self);
+                }
+                return;
+            }
+
+            // Start pong timeout timer only after ping succeeds
+            self->pong_timeout_timer_.expires_after(std::chrono::milliseconds(common::constants::PONG_TIMEOUT_MS));
+            self->pong_timeout_timer_.async_wait(
+                beast::bind_front_handler(
+                    &WebSocketSession::on_pong_timeout,
+                    self));
+            self->pong_pending_ = true;
+
+            // Schedule next ping after pong is received
+            self->start_ping_timer();
+        });
 }
 
 void WebSocketSession::on_pong_timeout(beast::error_code ec)
@@ -234,6 +247,5 @@ void WebSocketSession::on_pong(beast::error_code ec)
         return;
     }
 
-    // Schedule next ping
-    start_ping_timer();
+    // Pong received successfully, ping timer already scheduled in on_ping_timer
 }

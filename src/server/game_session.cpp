@@ -184,8 +184,8 @@ void GameSession::broadcastHandStarted()
         };
 
         // Send to specific player only
-        auto it = sessions_.find(player->id);
-        if (it != sessions_.end() && it->second) {
+        auto it = player_sessions_.find(player->id);
+        if (it != player_sessions_.end() && it->second) {
             sendJson(it->second, message);
         }
     }
@@ -204,6 +204,9 @@ void GameSession::sendActionRequest(const std::string& player_id)
         common::log::log(common::log::Level::ERROR, "sendActionRequest: player not found: " + player_id);
         return;
     }
+
+    // Log action request for timeout tracking
+    player->last_action_timestamp = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
     // Determine possible actions (simplified - should check actual betting state)
     nlohmann::json possible_actions = nlohmann::json::array({"fold", "call", "raise"});
