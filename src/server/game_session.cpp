@@ -208,8 +208,8 @@ void GameSession::sendActionRequest(const std::string& player_id)
     // Log action request for timeout tracking
     player->last_action_timestamp = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
-    // Determine possible actions (simplified - should check actual betting state)
-    nlohmann::json possible_actions = nlohmann::json::array({"fold", "call", "raise"});
+    // Determine possible actions based on current betting state
+    nlohmann::json possible_actions = nlohmann::json::array();
 
     // Calculate call amount: amount needed to match the highest bet
     int call_amount = 0;
@@ -231,8 +231,23 @@ void GameSession::sendActionRequest(const std::string& player_id)
     // Call amount is the difference between max bet and player's current bet
     call_amount = max_bet - player_bet;
 
-    // Get min raise from hand
+    // Fold is always available if it's their turn
+    possible_actions.push_back("fold");
+
+    // Call is available if there's a bet to call and player has enough chips
+    if (call_amount > 0 && player->stack >= call_amount) {
+        possible_actions.push_back("call");
+    }
+
+    // Check if player can raise
     int min_raise = hand->min_raise;
+    int max_raise = player->stack;
+    if (max_raise >= min_raise && max_raise > call_amount) {
+        possible_actions.push_back("raise");
+    }
+
+    // Get min raise from hand
+    min_raise = hand->min_raise;
 
     // Max raise is player's stack
     int max_raise = player->stack;

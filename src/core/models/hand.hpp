@@ -52,9 +52,39 @@ struct Hand {
 
     // Check if betting round is complete
     bool isBettingRoundComplete() const {
-        // Simplified: assume all players have acted and bets are equal
-        // In real implementation, need to track bets
-        return false; // placeholder
+        if (players.empty() || folded.empty() || player_bets.empty()) {
+            return false;
+        }
+
+        // Count active (non-folded) players
+        int active_players = 0;
+        for (size_t i = 0; i < players.size(); ++i) {
+            if (i < folded.size() && !folded[i]) {
+                active_players++;
+            }
+        }
+
+        // If only one player remains, round is complete
+        if (active_players <= 1) {
+            return true;
+        }
+
+        // Check if all active players have equal bets
+        int target_bet = -1;
+        for (size_t i = 0; i < players.size(); ++i) {
+            if (i < folded.size() && !folded[i]) {
+                if (i >= player_bets.size()) {
+                    return false;
+                }
+                if (target_bet == -1) {
+                    target_bet = player_bets[i];
+                } else if (player_bets[i] != target_bet) {
+                    return false;
+                }
+            }
+        }
+
+        return target_bet >= 0;
     }
 
     // Get current player to act

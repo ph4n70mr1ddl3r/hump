@@ -129,7 +129,29 @@ bool applyAction(Hand& hand, Player& player, const std::string& action, int amou
     // 3. Handle big blind preflop special case
     // 4. Rotate to next active player considering all betting rules
     if (hand.players.size() == 2) {
-        hand.current_player_to_act = (hand.current_player_to_act == hand.players[0]) ? hand.players[1] : hand.players[0];
+        // Check if current betting round is complete
+        if (hand.isBettingRoundComplete() && hand.current_betting_round != BettingRound::SHOWDOWN) {
+            // Advance to next betting round
+            if (hand.current_betting_round == BettingRound::PREFLOP) {
+                hand.current_betting_round = BettingRound::FLOP;
+            } else if (hand.current_betting_round == BettingRound::FLOP) {
+                hand.current_betting_round = BettingRound::TURN;
+            } else if (hand.current_betting_round == BettingRound::TURN) {
+                hand.current_betting_round = BettingRound::RIVER;
+            } else if (hand.current_betting_round == BettingRound::RIVER) {
+                hand.current_betting_round = BettingRound::SHOWDOWN;
+            }
+            // Reset player bets for the new round
+            for (size_t i = 0; i < hand.player_bets.size(); ++i) {
+                hand.player_bets[i] = 0;
+            }
+            // Small blind acts first in next round
+            if (!hand.players.empty()) {
+                hand.current_player_to_act = hand.players[0];
+            }
+        } else {
+            hand.current_player_to_act = (hand.current_player_to_act == hand.players[0]) ? hand.players[1] : hand.players[0];
+        }
     }
 
     return true;

@@ -95,13 +95,14 @@ bool TableManager::startHand() {
     hand.winners.clear();
     hand.completed_at = 0;
 
-    // Store hand in unique_ptr and set table reference
-    this->current_hand_ = std::make_unique<Hand>(hand);
-    table_.current_hand = this->current_hand_.get();
-
-    // Initialize player_bets and folded vectors
+    // Initialize player_bets and folded vectors BEFORE storing
     hand.player_bets.resize(hand.players.size(), 0);
     hand.folded.resize(hand.players.size(), false);
+
+    // Store hand in unique_ptr and set table reference
+    this->current_hand_ = std::make_unique<Hand>(hand);
+    Hand* stored_hand = this->current_hand_.get();
+    table_.current_hand = stored_hand;
 
     // Post blinds - find indices for small blind and big blind players
     int small_blind_amount = common::constants::SMALL_BLIND;
@@ -116,33 +117,33 @@ bool TableManager::startHand() {
     size_t big_blind_idx = (table_.dealer_button_position == 0) ? 0 : 1;
 
     // Post small blind
-    if (small_blind_idx < hand.players.size() && hand.players[small_blind_idx]) {
-        Player* small_blind_player = hand.players[small_blind_idx];
+    if (small_blind_idx < stored_hand->players.size() && stored_hand->players[small_blind_idx]) {
+        Player* small_blind_player = stored_hand->players[small_blind_idx];
         int sb_amount = std::min(small_blind_player->stack, small_blind_amount);
         if (sb_amount > 0) {
             small_blind_player->stack -= sb_amount;
-            hand.pot += sb_amount;
-            hand.player_bets[small_blind_idx] = sb_amount;
+            stored_hand->pot += sb_amount;
+            stored_hand->player_bets[small_blind_idx] = sb_amount;
         }
     }
 
     // Post big blind
-    if (big_blind_idx < hand.players.size() && hand.players[big_blind_idx]) {
-        Player* big_blind_player = hand.players[big_blind_idx];
+    if (big_blind_idx < stored_hand->players.size() && stored_hand->players[big_blind_idx]) {
+        Player* big_blind_player = stored_hand->players[big_blind_idx];
         int bb_amount = std::min(big_blind_player->stack, big_blind_amount);
         if (bb_amount > 0) {
             big_blind_player->stack -= bb_amount;
-            hand.pot += bb_amount;
-            hand.player_bets[big_blind_idx] = bb_amount;
+            stored_hand->pot += bb_amount;
+            stored_hand->player_bets[big_blind_idx] = bb_amount;
         }
     }
 
     // Deal hole cards
     try {
-        for (auto player : hand.players) {
+        for (auto player : stored_hand->players) {
             player->hole_cards.clear();
-            player->hole_cards.push_back(hand.deck.deal());
-            player->hole_cards.push_back(hand.deck.deal());
+            player->hole_cards.push_back(stored_hand->deck.deal());
+            player->hole_cards.push_back(stored_hand->deck.deal());
         }
     } catch (const std::out_of_range& e) {
         common::log::log(common::log::Level::ERROR, std::string("Deck exhausted: ") + e.what());
