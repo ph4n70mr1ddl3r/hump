@@ -131,11 +131,15 @@ void WebSocketSession::on_read(beast::error_code ec, std::size_t bytes_transferr
 
 void WebSocketSession::do_write()
 {
-    is_writing_ = true;
     ws_.text(true);
     std::string message;
     {
         std::lock_guard<std::mutex> lock(write_queue_mutex_);
+        if (write_queue_.empty()) {
+            is_writing_ = false;
+            return;
+        }
+        is_writing_ = true;
         message = write_queue_.front();
     }
     ws_.async_write(
@@ -185,13 +189,13 @@ void WebSocketSession::on_ping_timer(beast::error_code ec)
         return;
     }
 
-    // Start pong timeout timer
-    pong_pending_ = true;
+    // Start pong timeout timer FIRST, then set flag
     pong_timeout_timer_.expires_after(std::chrono::milliseconds(common::constants::PONG_TIMEOUT_MS));
     pong_timeout_timer_.async_wait(
         beast::bind_front_handler(
             &WebSocketSession::on_pong_timeout,
             shared_from_this()));
+    pong_pending_ = true;
 
     // Send ping
     ws_.async_ping("",

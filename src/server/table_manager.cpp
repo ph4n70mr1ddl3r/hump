@@ -100,10 +100,15 @@ bool TableManager::startHand() {
     table_.current_hand = this->current_hand_.get();
 
     // Deal hole cards
-    for (auto player : hand.players) {
-        player->hole_cards.clear();
-        player->hole_cards.push_back(hand.deck.deal());
-        player->hole_cards.push_back(hand.deck.deal());
+    try {
+        for (auto player : hand.players) {
+            player->hole_cards.clear();
+            player->hole_cards.push_back(hand.deck.deal());
+            player->hole_cards.push_back(hand.deck.deal());
+        }
+    } catch (const std::out_of_range& e) {
+        common::log::log(common::log::Level::ERROR, std::string("Deck exhausted: ") + e.what());
+        return false;
     }
 
     // Update table state

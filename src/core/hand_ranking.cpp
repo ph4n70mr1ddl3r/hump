@@ -329,8 +329,8 @@ HandRank HandRanking::evaluate(const std::vector<Card>& cards) {
     }
 
     // For 6 or 7 cards, evaluate all 5-card combinations and pick best
-    int n = card_values.size();
-    int k = 5;
+    const int n = card_values.size();
+    const int k = 5;
     HandRank best_rank = HandRank::HIGH_CARD;
 
     // Generate all combinations of indices

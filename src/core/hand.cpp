@@ -189,7 +189,13 @@ std::vector<Player*> determineWinners(const Hand& hand) {
     auto max_it = std::max_element(evaluations.begin(), evaluations.end(),
         [](const auto& a, const auto& b) { return a.second < b.second; });
     if (max_it != evaluations.end()) {
-        winners.push_back(max_it->first);
+        HandRank max_rank = max_it->second;
+        // Add ALL players with the max rank (handle ties)
+        for (const auto& eval : evaluations) {
+            if (eval.second == max_rank) {
+                winners.push_back(eval.first);
+            }
+        }
     }
     return winners;
 }

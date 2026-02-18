@@ -128,26 +128,6 @@ void GameSession::broadcastHandStarted()
 
     const Table& table = table_manager_.getTable();
 
-    nlohmann::json players_array = nlohmann::json::array();
-    for (Player* player : hand->players)
-    {
-        if (!player) {
-            common::log::log(common::log::Level::WARN, "broadcastHandStarted: null player in hand->players");
-            continue;
-        }
-        nlohmann::json player_json;
-        player_json["player_id"] = player->id;
-        player_json["stack"] = player->stack;
-        // Include hole cards (convert Card to string)
-        nlohmann::json cards_json = nlohmann::json::array();
-        for (const Card& card : player->hole_cards)
-        {
-            cards_json.push_back(card.toString());
-        }
-        player_json["hole_cards"] = cards_json;
-        players_array.push_back(player_json);
-    }
-
     // Determine small blind and big blind amounts (fixed per spec)
     int small_blind = common::constants::SMALL_BLIND;
     int big_blind = common::constants::BIG_BLIND;
@@ -159,22 +139,56 @@ void GameSession::broadcastHandStarted()
         current_player_id = hand->current_player_to_act->id;
     }
 
-    nlohmann::json payload = {
-        {"hand_id", hand->id},
-        {"players", players_array},
-        {"small_blind", small_blind},
-        {"big_blind", big_blind},
-        {"dealer_position", table.dealer_button_position},
-        {"current_player_to_act", current_player_id},
-        {"min_raise", hand->min_raise}
-    };
+    // Send personalized message to each player (only their own hole cards)
+    for (Player* player : hand->players)
+    {
+        if (!player) {
+            common::log::log(common::log::Level::WARN, "broadcastHandStarted: null player in hand->players");
+            continue;
+        }
 
-    nlohmann::json message = {
-        {"type", "hand_started"},
-        {"payload", payload}
-    };
+        // Build player info for this specific player
+        nlohmann::json players_array = nlohmann::json::array();
+        for (Player* p : hand->players)
+        {
+            if (!p) continue;
+            nlohmann::json player_json;
+            player_json["player_id"] = p->id;
+            player_json["stack"] = p->stack;
+            
+            // Only include hole cards for the recipient player (security: don't leak opponent cards)
+            nlohmann::json cards_json = nlohmann::json::array();
+            if (p->id == player->id) {
+                for (const Card& card : p->hole_cards)
+                {
+                    cards_json.push_back(card.toString());
+                }
+            }
+            player_json["hole_cards"] = cards_json;
+            players_array.push_back(player_json);
+        }
 
-    broadcastJson(message);
+        nlohmann::json payload = {
+            {"hand_id", hand->id},
+            {"players", players_array},
+            {"small_blind", small_blind},
+            {"big_blind", big_blind},
+            {"dealer_position", table.dealer_button_position},
+            {"current_player_to_act", current_player_id},
+            {"min_raise", hand->min_raise}
+        };
+
+        nlohmann::json message = {
+            {"type", "hand_started"},
+            {"payload", payload}
+        };
+
+        // Send to specific player only
+        auto it = sessions_.find(player->id);
+        if (it != sessions_.end() && it->second) {
+            sendJson(it->second, message);
+        }
+    }
 }
 
 void GameSession::sendActionRequest(const std::string& player_id)
