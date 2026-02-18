@@ -252,10 +252,15 @@ void GameSession::sendActionRequest(const std::string& player_id)
 
     // Get min raise from hand
     int min_raise = hand->min_raise;
-    int max_raise = player->stack;
+    
+    // Calculate raise range in terms of ADDITIONAL chips (not total bet)
+    // min_raise_additional: minimum additional chips to put in (hand->min_raise - player_bet)
+    // max_raise_additional: additional chips possible (player->stack - call_amount)
+    int min_raise_additional = std::max(0, min_raise - player_bet);
+    int max_raise_additional = player->stack - call_amount;
 
-    // Check if player can raise (must be at least min_raise and higher than call)
-    if (max_raise >= min_raise && max_raise > call_amount) {
+    // Check if player can raise (must be able to at least call and then raise to min)
+    if (max_raise_additional >= min_raise_additional && max_raise_additional > 0) {
         possible_actions.push_back("raise");
     }
 
@@ -266,8 +271,8 @@ void GameSession::sendActionRequest(const std::string& player_id)
         {"hand_id", hand->id},
         {"possible_actions", possible_actions},
         {"call_amount", call_amount},
-        {"min_raise", min_raise},
-        {"max_raise", max_raise},
+        {"min_raise", min_raise_additional},
+        {"max_raise", max_raise_additional},
         {"timeout_ms", timeout_ms}
     };
 

@@ -164,6 +164,9 @@ void TableManager::endHand() {
     }
     Hand* hand = table_.current_hand;
 
+    // Calculate side pots before determining winners
+    poker::calculateSidePots(*hand);
+
     // Determine winners
     std::vector<Player*> winners = poker::determineWinners(*hand);
     hand->winners = winners;

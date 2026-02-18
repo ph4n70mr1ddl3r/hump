@@ -37,6 +37,7 @@ bool validateAction(const Hand& hand, const Player& player, const std::string& a
 
     // Validate call amount is correct (must match difference to highest bet)
     if (action == "call") {
+        // Find the highest bet among all players (excluding current player)
         int max_bet = 0;
         for (size_t i = 0; i < hand.player_bets.size() && i < hand.players.size(); ++i) {
             if (hand.players[i] == &player) {
@@ -46,6 +47,8 @@ bool validateAction(const Hand& hand, const Player& player, const std::string& a
                 max_bet = hand.player_bets[i];
             }
         }
+        
+        // Get current player's current bet
         int player_current_bet = 0;
         for (size_t i = 0; i < hand.players.size(); ++i) {
             if (hand.players[i] == &player && i < hand.player_bets.size()) {
@@ -53,15 +56,29 @@ bool validateAction(const Hand& hand, const Player& player, const std::string& a
                 break;
             }
         }
+        
         int required_call = max_bet - player_current_bet;
-        if (amount != required_call) {
+        
+        // Allow exact call amount OR zero (check) when facing no bet
+        if (amount != required_call && !(amount == 0 && required_call == 0)) {
             return false;
         }
     }
 
-    // Raise must be at least min raise
+    // Raise must be at least min raise (total bet must be at least min_raise)
     if (action == "raise") {
-        if (amount < hand.min_raise) {
+        // Find current player's current bet
+        int player_current_bet = 0;
+        for (size_t i = 0; i < hand.players.size(); ++i) {
+            if (hand.players[i] == &player && i < hand.player_bets.size()) {
+                player_current_bet = hand.player_bets[i];
+                break;
+            }
+        }
+        
+        // The total bet after raising must be at least min_raise
+        int total_bet_after_raise = player_current_bet + amount;
+        if (total_bet_after_raise < hand.min_raise) {
             return false;
         }
     }
