@@ -35,6 +35,30 @@ bool validateAction(const Hand& hand, const Player& player, const std::string& a
         }
     }
 
+    // Validate call amount is correct (must match difference to highest bet)
+    if (action == "call") {
+        int max_bet = 0;
+        for (size_t i = 0; i < hand.player_bets.size() && i < hand.players.size(); ++i) {
+            if (hand.players[i] == &player) {
+                continue; // skip current player
+            }
+            if (hand.player_bets[i] > max_bet) {
+                max_bet = hand.player_bets[i];
+            }
+        }
+        int player_current_bet = 0;
+        for (size_t i = 0; i < hand.players.size(); ++i) {
+            if (hand.players[i] == &player && i < hand.player_bets.size()) {
+                player_current_bet = hand.player_bets[i];
+                break;
+            }
+        }
+        int required_call = max_bet - player_current_bet;
+        if (amount != required_call) {
+            return false;
+        }
+    }
+
     // Raise must be at least min raise
     if (action == "raise") {
         if (amount < hand.min_raise) {

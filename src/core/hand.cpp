@@ -24,11 +24,26 @@ void startHand(Hand& hand, Deck& deck, Player* dealer, Player* small_blind, Play
     hand.pot = 0;
     hand.side_pots.clear();
     hand.current_betting_round = BettingRound::PREFLOP;
-    hand.current_player_to_act = small_blind; // small blind acts first preflop? Actually big blind acts last preflop. Simplified.
+    hand.current_player_to_act = small_blind;
     hand.min_raise = common::constants::BIG_BLIND;
     hand.history.clear();
     hand.winners.clear();
     hand.completed_at = 0;
+
+    // Post blinds
+    int small_blind_amount = common::constants::SMALL_BLIND;
+    int big_blind_amount = common::constants::BIG_BLIND;
+
+    if (small_blind && small_blind->stack >= small_blind_amount) {
+        small_blind->stack -= small_blind_amount;
+        hand.pot += small_blind_amount;
+        hand.player_bets[0] = small_blind_amount;
+    }
+    if (big_blind && big_blind->stack >= big_blind_amount) {
+        big_blind->stack -= big_blind_amount;
+        hand.pot += big_blind_amount;
+        hand.player_bets[1] = big_blind_amount;
+    }
 
     // Deal hole cards
     dealHoleCards(hand, hand.deck);
@@ -209,7 +224,6 @@ void resetHand(Hand& hand) {
     hand.table = nullptr;
     hand.players.clear();
     hand.deck = Deck();
-    hand.deck.shuffle();
     hand.community_cards.clear();
     hand.pot = 0;
     hand.side_pots.clear();

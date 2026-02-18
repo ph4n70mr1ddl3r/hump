@@ -99,6 +99,29 @@ bool TableManager::startHand() {
     this->current_hand_ = std::make_unique<Hand>(hand);
     table_.current_hand = this->current_hand_.get();
 
+    // Initialize player_bets and folded vectors
+    hand.player_bets.resize(hand.players.size(), 0);
+    hand.folded.resize(hand.players.size(), false);
+
+    // Post blinds
+    int small_blind_amount = common::constants::SMALL_BLIND;
+    int big_blind_amount = common::constants::BIG_BLIND;
+
+    // Small blind (seat after dealer)
+    Player* small_blind_player = (table_.dealer_button_position == 0) ? table_.seat_1 : table_.seat_2;
+    Player* big_blind_player = (table_.dealer_button_position == 0) ? table_.seat_2 : table_.seat_1;
+
+    if (small_blind_player && small_blind_player->stack >= small_blind_amount) {
+        small_blind_player->stack -= small_blind_amount;
+        hand.pot += small_blind_amount;
+        hand.player_bets[0] = small_blind_amount;
+    }
+    if (big_blind_player && big_blind_player->stack >= big_blind_amount) {
+        big_blind_player->stack -= big_blind_amount;
+        hand.pot += big_blind_amount;
+        hand.player_bets[1] = big_blind_amount;
+    }
+
     // Deal hole cards
     try {
         for (auto player : hand.players) {
