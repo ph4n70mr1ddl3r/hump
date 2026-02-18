@@ -323,48 +323,12 @@ HandRank HandRanking::evaluate(const std::vector<Card>& cards) {
 
     auto card_values = toCardValues(cards);
 
-    // For 5 cards, evaluate directly
     if (cards.size() == 5) {
         return evaluateFiveCards(card_values);
     }
 
-    // For 6 or 7 cards, evaluate all 5-card combinations and pick best
-    const int n = card_values.size();
-    const int k = 5;
-    HandRank best_rank = HandRank::HIGH_CARD;
-
-    // Generate all combinations of indices
-    std::vector<int> indices(k);
-    for (int i = 0; i < k; ++i) indices[i] = i;
-
-    while (true) {
-        // Build current combination
-        std::vector<CardValue> combo;
-        combo.reserve(k);
-        for (int i : indices) {
-            combo.push_back(card_values[i]);
-        }
-
-        HandRank rank = evaluateFiveCards(combo);
-        if (rank > best_rank) {
-            best_rank = rank;
-        }
-        // Note: for ties (same rank), we'd need to compare kickers
-        // but for evaluation alone, any hand with same rank is equivalent
-
-        // Next combination
-        int i = k - 1;
-        while (i >= 0 && indices[i] == n - k + i) {
-            --i;
-        }
-        if (i < 0) break;
-        ++indices[i];
-        for (int j = i + 1; j < k; ++j) {
-            indices[j] = indices[j - 1] + 1;
-        }
-    }
-
-    return best_rank;
+    std::vector<CardValue> best_combo;
+    return evaluateBestFiveCards(card_values, best_combo);
 }
 
 std::string HandRanking::rankToString(HandRank rank) noexcept {

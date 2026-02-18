@@ -118,7 +118,7 @@ bool applyAction(Hand& hand, Player& player, const std::string& action, int amou
             }
         }
         int new_total_bet = current_max_bet + amount;
-        hand.min_raise = std::max(new_total_bet, hand.min_raise * 2);
+        hand.min_raise = new_total_bet;
     }
 
     // Update player's total bet amount
@@ -157,7 +157,6 @@ bool applyAction(Hand& hand, Player& player, const std::string& action, int amou
     if (hand.players.size() == 2) {
         // Check if current betting round is complete
         if (hand.isBettingRoundComplete() && hand.current_betting_round != BettingRound::SHOWDOWN) {
-            // Advance to next betting round
             if (hand.current_betting_round == BettingRound::PREFLOP) {
                 hand.current_betting_round = BettingRound::FLOP;
             } else if (hand.current_betting_round == BettingRound::FLOP) {
@@ -167,13 +166,18 @@ bool applyAction(Hand& hand, Player& player, const std::string& action, int amou
             } else if (hand.current_betting_round == BettingRound::RIVER) {
                 hand.current_betting_round = BettingRound::SHOWDOWN;
             }
-            // Reset player bets for the new round
             for (size_t i = 0; i < hand.player_bets.size(); ++i) {
                 hand.player_bets[i] = 0;
             }
-            // Small blind acts first in next round
             if (!hand.players.empty()) {
-                hand.current_player_to_act = hand.players[0];
+                if (hand.current_betting_round == BettingRound::FLOP) {
+                    size_t small_blind_idx = (hand.table && hand.table->dealer_button_position == 0) ? 1 : 0;
+                    if (small_blind_idx < hand.players.size()) {
+                        hand.current_player_to_act = hand.players[small_blind_idx];
+                    }
+                } else {
+                    hand.current_player_to_act = hand.players[0];
+                }
             }
         } else {
             hand.current_player_to_act = (hand.current_player_to_act == hand.players[0]) ? hand.players[1] : hand.players[0];

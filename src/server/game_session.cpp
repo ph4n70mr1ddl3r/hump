@@ -265,7 +265,7 @@ void GameSession::sendActionRequest(const std::string& player_id)
     }
 
     // Timeout (configurable, default 30 seconds)
-    int timeout_ms = common::constants::ACTION_TIMEOUT_MS;
+    int timeout_ms = action_timeout_ms_;
 
     nlohmann::json payload = {
         {"hand_id", hand->id},
