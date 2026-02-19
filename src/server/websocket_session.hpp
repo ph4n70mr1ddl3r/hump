@@ -39,7 +39,6 @@ private:
     void start_ping_timer();
     void on_ping_timer(beast::error_code ec);
     void on_pong_timeout(beast::error_code ec);
-    void on_pong(beast::error_code ec);
 
     websocket::stream<tcp::socket> ws_;
     beast::flat_buffer buffer_;

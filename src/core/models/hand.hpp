@@ -43,15 +43,13 @@ struct Hand {
     std::vector<Player*> winners; // populated at showdown
     uint64_t completed_at; // timestamp when hand finished
 
-    // Validation helper
-    bool isValid() const {
+    [[nodiscard]] bool isValid() const {
         return players.size() == 2 &&
                community_cards.size() <= 5 &&
                min_raise >= 4; // at least big blind
     }
 
-    // Check if betting round is complete
-    bool isBettingRoundComplete() const {
+    [[nodiscard]] bool isBettingRoundComplete() const {
         if (players.empty() || folded.empty() || player_bets.empty()) {
             return false;
         }
@@ -87,8 +85,7 @@ struct Hand {
         return target_bet >= 0;
     }
 
-    // Get current player to act
-    Player* getCurrentPlayer() const {
+    [[nodiscard]] Player* getCurrentPlayer() const {
         return current_player_to_act;
     }
 

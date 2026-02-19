@@ -15,13 +15,11 @@ GameSession::GameSession(boost::asio::io_context& ioc, int action_timeout_ms, in
       removal_timeout_ms_(removal_timeout_ms),
       ioc_(ioc),
       connection_manager_(ioc),
-      player_state_manager_(connection_manager_, table_manager_, disconnect_grace_time_ms, removal_timeout_ms,
-          [self = shared_from_this()](const std::string& player_id) {
-              if (self) {
-                  self->broadcastPlayerRemoved(player_id);
-              }
-          })
+      player_state_manager_(connection_manager_, table_manager_, disconnect_grace_time_ms, removal_timeout_ms, nullptr)
 {
+    player_state_manager_.setRemovalCallback([this](const std::string& player_id) {
+        broadcastPlayerRemoved(player_id);
+    });
 }
 
 nlohmann::json GameSession::createErrorResponse(const std::string& code, const std::string& message) const

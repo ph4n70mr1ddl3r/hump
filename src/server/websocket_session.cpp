@@ -235,17 +235,3 @@ void WebSocketSession::on_pong_timeout(beast::error_code ec)
     }
 }
 
-void WebSocketSession::on_pong(beast::error_code ec)
-{
-    if (ec)
-    {
-        // Ping failed, treat as disconnect
-        if (auto game_session = game_session_.lock())
-        {
-            game_session->onDisconnect(shared_from_this());
-        }
-        return;
-    }
-
-    // Pong received successfully, ping timer already scheduled in on_ping_timer
-}

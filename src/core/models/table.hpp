@@ -34,15 +34,13 @@ struct Table {
     int dealer_button_position; // 0 or 1
     TableState state;
 
-    // Validation helper
-    bool isValid() const {
+    [[nodiscard]] bool isValid() const {
         return (seat_1 != nullptr && seat_2 != nullptr) &&
                (community_cards.size() <= 5) &&
                (dealer_button_position == 0 || dealer_button_position == 1);
     }
 
-    // Check if table is ready to start a hand
-    bool isReadyForHand() const {
+    [[nodiscard]] bool isReadyForHand() const {
         return state == TableState::WAITING_FOR_PLAYERS &&
                seat_1 != nullptr && seat_2 != nullptr;
     }

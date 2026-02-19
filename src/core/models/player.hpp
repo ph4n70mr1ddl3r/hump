@@ -27,21 +27,18 @@ struct Player {
     std::optional<uint64_t> disconnected_at; // nullable timestamp
     bool is_sitting_out; // true if player has been folded due to timeout
 
-    // Validation helper
-    bool isValid() const {
+    [[nodiscard]] bool isValid() const {
         return stack >= 0 &&
                (seat == common::constants::SEAT_1 || seat == common::constants::SEAT_2) &&
                (hole_cards.size() == 0 || hole_cards.size() == 2);
     }
 
-    // Check if player can act
-    bool canAct() const {
+    [[nodiscard]] bool canAct() const {
         return connection_status == ConnectionStatus::CONNECTED &&
                !is_sitting_out;
     }
 
-    // Check if stack is below top-up threshold (5BB = 20 chips)
-    bool needsTopUp() const {
+    [[nodiscard]] bool needsTopUp() const {
         return stack < TOP_UP_THRESHOLD;
     }
 

@@ -10,7 +10,10 @@ class PlayerStateManager {
 public:
     PlayerStateManager(ConnectionManager& connection_manager, TableManager& table_manager, int grace_time_ms, int removal_time_ms, std::function<void(const std::string&)> on_player_removed_callback);
 
-    // Called when a player disconnects (websocket closed)
+    void setRemovalCallback(std::function<void(const std::string&)> callback) {
+        on_player_removed_callback_ = std::move(callback);
+    }
+
     void onDisconnect(Player& player);
 
     // Called when a player reconnects within grace period
