@@ -21,6 +21,7 @@ constexpr int MAX_BET = 10000;
 constexpr int MAX_ACTION_TIMEOUT_MS = 300000;
 constexpr int MIN_ACTION_TIMEOUT_MS = 1000;
 constexpr int MAX_AMOUNT_MULTIPLIER = 10;
+constexpr int MAX_NAME_LENGTH = 32;
 
 } // namespace constants
 } // namespace common

@@ -18,6 +18,7 @@ using tcp = net::ip::tcp;
 class GameSession : public std::enable_shared_from_this<GameSession> {
 public:
     GameSession(boost::asio::io_context& ioc, int action_timeout_ms = 30000, int disconnect_grace_time_ms = 30000, int removal_timeout_ms = 60000);
+    virtual ~GameSession() = default;
 
     // Handle incoming message from a WebSocket connection
     void handleMessage(const std::string& message, std::shared_ptr<WebSocketSession> session);

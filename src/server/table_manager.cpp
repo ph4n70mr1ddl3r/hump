@@ -221,10 +221,6 @@ bool TableManager::processPlayerAction(const std::string& player_id, const std::
     return true;
 }
 
-void TableManager::dealHoleCards() {
-    // Already done in startHand
-}
-
 void TableManager::dealCommunityCards() {
     if (!table_.current_hand) {
         return;

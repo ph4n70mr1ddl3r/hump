@@ -192,23 +192,33 @@ std::vector<Player*> determineWinners(const Hand& hand) {
 
     // Evaluate each active player's hand (hole cards + community cards)
     std::vector<std::pair<Player*, HandRank>> evaluations;
+    std::vector<std::vector<Card>> all_cards_list;
     for (auto player : active_players) {
-        // Combine cards
         std::vector<Card> all_cards = player->hole_cards;
         all_cards.insert(all_cards.end(), hand.community_cards.begin(), hand.community_cards.end());
         HandRank rank = HandRanking::evaluate(all_cards);
         evaluations.emplace_back(player, rank);
+        all_cards_list.push_back(std::move(all_cards));
     }
 
-    // Find max rank
-    auto max_it = std::max_element(evaluations.begin(), evaluations.end(),
-        [](const auto& a, const auto& b) { return a.second < b.second; });
-    if (max_it != evaluations.end()) {
-        HandRank max_rank = max_it->second;
-        // Add ALL players with the max rank (handle ties)
-        for (const auto& eval : evaluations) {
-            if (eval.second == max_rank) {
-                winners.push_back(eval.first);
+    size_t best_idx = 0;
+    for (size_t i = 1; i < evaluations.size(); ++i) {
+        if (evaluations[i].second > evaluations[best_idx].second) {
+            best_idx = i;
+        } else if (evaluations[i].second == evaluations[best_idx].second) {
+            int cmp = HandRanking::compare(all_cards_list[i], all_cards_list[best_idx]);
+            if (cmp > 0) {
+                best_idx = i;
+            }
+        }
+    }
+    
+    HandRank best_rank = evaluations[best_idx].second;
+    const auto& best_cards = all_cards_list[best_idx];
+    for (size_t i = 0; i < evaluations.size(); ++i) {
+        if (evaluations[i].second == best_rank) {
+            if (i == best_idx || HandRanking::compare(all_cards_list[i], best_cards) == 0) {
+                winners.push_back(evaluations[i].first);
             }
         }
     }

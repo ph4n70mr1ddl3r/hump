@@ -3,14 +3,17 @@
 #include "models/table.hpp"
 #include "models/hand.hpp"
 #include "hand_ranking.hpp"
+#include "../common/logging.hpp"
 #include <algorithm>
 #include <vector>
-#include <cassert>
 
 namespace pot {
 
 std::vector<SidePot> calculateSidePots(const std::vector<Player*>& players, const std::vector<int>& bets) {
-    assert(players.size() == bets.size());
+    if (players.size() != bets.size()) {
+        common::log::log(common::log::Level::ERROR, "calculateSidePots: players/bets size mismatch");
+        return {};
+    }
     std::vector<SidePot> side_pots;
 
     if (players.empty()) {
@@ -52,7 +55,10 @@ std::vector<SidePot> calculateSidePots(const std::vector<Player*>& players, cons
 }
 
 std::vector<Player*> getEligiblePlayersForPot(const std::vector<Player*>& players, const std::vector<int>& bets, int pot_threshold) {
-    assert(players.size() == bets.size());
+    if (players.size() != bets.size()) {
+        common::log::log(common::log::Level::ERROR, "getEligiblePlayersForPot: players/bets size mismatch");
+        return {};
+    }
     std::vector<Player*> eligible;
 
     for (size_t i = 0; i < players.size(); ++i) {

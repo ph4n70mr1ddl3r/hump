@@ -109,16 +109,22 @@ bool applyAction(Hand& hand, Player& player, const std::string& action, int amou
     } else if (action == "raise") {
         player.stack -= amount;
         hand.pot += amount;
-        // Calculate new min_raise: new total bet must be at least double the previous raise
-        // or at least the current bet + min_raise (standard NLHE rule)
         int current_max_bet = 0;
         for (size_t i = 0; i < hand.player_bets.size() && i < hand.players.size(); ++i) {
             if (hand.player_bets[i] > current_max_bet) {
                 current_max_bet = hand.player_bets[i];
             }
         }
-        int new_total_bet = current_max_bet + amount;
-        hand.min_raise = new_total_bet;
+        int player_current_bet = 0;
+        for (size_t i = 0; i < hand.players.size(); ++i) {
+            if (hand.players[i] == &player && i < hand.player_bets.size()) {
+                player_current_bet = hand.player_bets[i];
+                break;
+            }
+        }
+        int new_total_bet = player_current_bet + amount;
+        int raise_size = new_total_bet - current_max_bet;
+        hand.min_raise = raise_size;
     }
 
     // Update player's total bet amount

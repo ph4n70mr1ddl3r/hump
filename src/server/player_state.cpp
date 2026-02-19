@@ -68,5 +68,5 @@ bool PlayerStateManager::isActive(const Player& player) const
 uint64_t PlayerStateManager::now() const
 {
     using namespace std::chrono;
-    return duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
+    return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 }

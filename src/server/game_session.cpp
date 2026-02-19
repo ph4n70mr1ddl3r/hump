@@ -555,6 +555,10 @@ void GameSession::handleJoin(const nlohmann::json& payload, std::shared_ptr<WebS
         sendJson(session, createErrorResponse("invalid_input", "Player name cannot be empty"));
         return;
     }
+    if (name.length() > common::constants::MAX_NAME_LENGTH) {
+        sendJson(session, createErrorResponse("invalid_input", "Player name too long"));
+        return;
+    }
 
     // Optional player_id for reconnection
     std::string provided_player_id;

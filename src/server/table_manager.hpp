@@ -34,7 +34,6 @@ private:
     std::vector<std::shared_ptr<Player>> players_;
     std::unique_ptr<Hand> current_hand_;
 
-    void dealHoleCards();
     void dealCommunityCards();
     void advanceBettingRound();
 
