@@ -4,8 +4,9 @@
 namespace common {
 namespace log {
 
+static std::mutex log_mutex;
+
 void init() {
-    // Nothing to initialize for now
 }
 
 std::string levelToString(Level level) {
@@ -19,6 +20,7 @@ std::string levelToString(Level level) {
 }
 
 void log(Level level, const std::string& message) {
+    std::lock_guard<std::mutex> lock(log_mutex);
     std::cout << "[" << levelToString(level) << "] " << message << std::endl;
 }
 

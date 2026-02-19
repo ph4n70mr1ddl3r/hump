@@ -146,14 +146,14 @@ void Client::run()
             {
                 if (!json.contains("payload")) {
                     std::cerr << "action_request missing payload" << std::endl;
-                    return;
+                    break;
                 }
                 const auto& payload = json.at("payload");
                 if (!payload.contains("hand_id") || !payload.contains("possible_actions") ||
                     !payload.contains("call_amount") || !payload.contains("min_raise") ||
                     !payload.contains("max_raise")) {
                     std::cerr << "action_request missing required fields" << std::endl;
-                    return;
+                    break;
                 }
                 std::string hand_id = payload.at("hand_id").get<std::string>();
                 nlohmann::json possible_actions = payload.at("possible_actions");
@@ -201,15 +201,14 @@ void Client::run()
             else if (type == "hand_completed")
             {
                 std::cout << "Hand completed: " << msg << std::endl;
-                // Parse updated stacks
                 if (!json.contains("payload")) {
                     std::cerr << "hand_completed missing payload" << std::endl;
-                    return;
+                    break;
                 }
                 const auto& payload = json.at("payload");
                 if (!payload.contains("updated_stacks")) {
                     std::cerr << "hand_completed missing updated_stacks" << std::endl;
-                    return;
+                    break;
                 }
                 const auto& updated_stacks = payload.at("updated_stacks");
                 if (updated_stacks.contains(player_id_)) {
@@ -229,7 +228,7 @@ void Client::run()
             {
                 if (!json.contains("payload") || !json.at("payload").contains("new_stack")) {
                     std::cerr << "top_up_ack missing required fields" << std::endl;
-                    return;
+                    break;
                 }
                 const auto& payload = json.at("payload");
                 stack_ = payload.at("new_stack").get<int>();

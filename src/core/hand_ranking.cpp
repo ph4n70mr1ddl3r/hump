@@ -3,9 +3,6 @@
 #include <unordered_map>
 #include <stdexcept>
 
-// Forward declarations
-
-
 struct CardValue {
     int rank; // 0-12
     int suit; // 0-3

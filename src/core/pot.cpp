@@ -65,11 +65,11 @@ std::vector<Player*> getEligiblePlayersForPot(const std::vector<Player*>& player
 }
 
 void distributePot(Hand& hand, const std::vector<Player*>& winners) {
-    // Distribute main pot to winners (as before)
     if (!winners.empty() && hand.pot > 0) {
         int share = hand.pot / static_cast<int>(winners.size());
         int remainder = hand.pot % static_cast<int>(winners.size());
         for (size_t i = 0; i < winners.size(); ++i) {
+            if (!winners[i]) continue;
             int amount = share + (i < static_cast<size_t>(remainder) ? 1 : 0);
             if (amount > 0) {
                 awardPot(winners[i], amount);
@@ -78,19 +78,16 @@ void distributePot(Hand& hand, const std::vector<Player*>& winners) {
         hand.pot = 0;
     }
 
-    // Distribute side pots
     for (SidePot& side_pot : hand.side_pots) {
         if (side_pot.amount == 0) continue;
-        // Filter winners who are eligible for this side pot
         std::vector<Player*> eligible_winners;
         for (Player* winner : winners) {
+            if (!winner) continue;
             if (std::find(side_pot.eligible_players.begin(), side_pot.eligible_players.end(), winner) != side_pot.eligible_players.end()) {
                 eligible_winners.push_back(winner);
             }
         }
-        // If no eligible winners (should not happen), skip
         if (eligible_winners.empty()) continue;
-        // Split side pot among eligible winners equally (since they already have same hand rank)
         int share = side_pot.amount / static_cast<int>(eligible_winners.size());
         int remainder = side_pot.amount % static_cast<int>(eligible_winners.size());
         for (size_t i = 0; i < eligible_winners.size(); ++i) {
@@ -101,7 +98,6 @@ void distributePot(Hand& hand, const std::vector<Player*>& winners) {
         }
         side_pot.amount = 0;
     }
-    // Clear side pots with zero amount
     hand.side_pots.erase(std::remove_if(hand.side_pots.begin(), hand.side_pots.end(),
         [](const SidePot& sp) { return sp.amount == 0; }), hand.side_pots.end());
 }

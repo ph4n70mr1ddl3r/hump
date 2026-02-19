@@ -727,7 +727,7 @@ void GameSession::handleAction(const nlohmann::json& payload, std::shared_ptr<We
         sendJson(session, createErrorResponse("invalid_amount", "Amount cannot be negative"));
         return;
     }
-    if (amount > common::constants::STARTING_STACK * 10) {
+    if (amount > common::constants::STARTING_STACK * common::constants::MAX_AMOUNT_MULTIPLIER) {
         sendJson(session, createErrorResponse("invalid_amount", "Amount exceeds maximum allowed"));
         return;
     }
