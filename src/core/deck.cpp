@@ -43,3 +43,7 @@ Card Deck::deal() {
 std::size_t Deck::size() const {
     return cards_.size() - next_card_;
 }
+
+bool Deck::empty() const {
+    return next_card_ >= cards_.size();
+}

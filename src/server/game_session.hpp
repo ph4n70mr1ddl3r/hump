@@ -83,5 +83,8 @@ private:
     // Broadcast player_reconnected message
     void broadcastPlayerReconnected(const std::string& player_id);
 
+    // Broadcast community_cards_dealt message
+    void broadcastCommunityCardsDealt();
+
     nlohmann::json createErrorResponse(const std::string& code, const std::string& message) const;
 };

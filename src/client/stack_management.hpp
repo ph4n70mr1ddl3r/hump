@@ -1,23 +1,23 @@
 #pragma once
 
+#include "../common/constants.hpp"
+
 namespace stack_management {
 
-// Default big blind amount (fixed at 4 chips)
-constexpr int BIG_BLIND = 4;
+inline bool shouldTopUp(int currentStack) {
+    return currentStack < common::constants::BIG_BLIND * 5;
+}
 
-// Default stack top-up threshold (5 big blinds)
-constexpr int TOP_UP_THRESHOLD_BB = 5;
+inline int topUpAmount(int currentStack) {
+    if (!shouldTopUp(currentStack)) return 0;
+    return common::constants::STARTING_STACK - currentStack;
+}
 
-// Default target stack (100 big blinds)
-constexpr int TARGET_STACK_BB = 100;
-
-// Check if stack is below top-up threshold
-bool shouldTopUp(int currentStack);
-
-// Calculate amount needed to top up to target stack
-int topUpAmount(int currentStack);
-
-// Top up the stack to target (returns new stack)
-int topUp(int currentStack);
+inline int topUp(int currentStack) {
+    if (shouldTopUp(currentStack)) {
+        return common::constants::STARTING_STACK;
+    }
+    return currentStack;
+}
 
 } // namespace stack_management

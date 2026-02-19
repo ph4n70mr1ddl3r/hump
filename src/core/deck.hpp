@@ -11,6 +11,7 @@ public:
     void shuffle();
     Card deal();
     std::size_t size() const;
+    bool empty() const;
 
 private:
     std::vector<Card> cards_;

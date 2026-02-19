@@ -441,6 +441,41 @@ void GameSession::broadcastPlayerReconnected(const std::string& player_id)
     broadcastJson(message);
 }
 
+void GameSession::broadcastCommunityCardsDealt()
+{
+    const Hand* hand = table_manager_.getCurrentHand();
+    if (!hand) {
+        common::log::log(common::log::Level::ERROR, "broadcastCommunityCardsDealt: no current hand");
+        return;
+    }
+
+    nlohmann::json cards_json = nlohmann::json::array();
+    for (const Card& card : hand->community_cards) {
+        cards_json.push_back(card.toString());
+    }
+
+    std::string round_name;
+    switch (hand->current_betting_round) {
+        case BettingRound::FLOP: round_name = "flop"; break;
+        case BettingRound::TURN: round_name = "turn"; break;
+        case BettingRound::RIVER: round_name = "river"; break;
+        default: round_name = "unknown"; break;
+    }
+
+    nlohmann::json payload = {
+        {"hand_id", hand->id},
+        {"community_cards", cards_json},
+        {"round", round_name}
+    };
+
+    nlohmann::json message = {
+        {"type", "community_cards_dealt"},
+        {"payload", payload}
+    };
+
+    broadcastJson(message);
+}
+
 void GameSession::registerSession(const std::string& player_id, std::shared_ptr<WebSocketSession> session)
 {
     std::lock_guard<std::mutex> lock(sessions_mutex_);
@@ -734,7 +769,12 @@ void GameSession::handleAction(const nlohmann::json& payload, std::shared_ptr<We
 
     // Get current hand again after processing action
     const Hand* hand_after = table_manager_.getCurrentHand();
-    
+
+    // Check if betting round advanced and broadcast community cards dealt
+    if (hand_after && hand_after->last_advanced_round != BettingRound::SHOWDOWN) {
+        broadcastCommunityCardsDealt();
+    }
+
     // Send action request to next player if hand not completed
     if (hand_after && hand_after->current_player_to_act)
     {

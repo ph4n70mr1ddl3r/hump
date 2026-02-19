@@ -37,6 +37,7 @@ struct Hand {
     std::vector<int> player_bets; // total chips contributed by each player (aligned with players)
     std::vector<bool> folded; // whether each player has folded (aligned with players)
     BettingRound current_betting_round;
+    BettingRound last_advanced_round = BettingRound::SHOWDOWN;
     Player* current_player_to_act; // whose turn it is
     int min_raise; // minimum raise amount
     std::vector<ActionHistory> history;

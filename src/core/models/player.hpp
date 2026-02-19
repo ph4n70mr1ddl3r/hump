@@ -7,9 +7,6 @@
 #include <cstdint>
 #include <optional>
 
-constexpr int TARGET_STACK = 400; // 100BB at 2/4 blinds
-constexpr int TOP_UP_THRESHOLD = 20; // 5BB at 2/4 blinds
-
 enum class ConnectionStatus {
     CONNECTED,
     DISCONNECTED,
@@ -39,13 +36,12 @@ struct Player {
     }
 
     [[nodiscard]] bool needsTopUp() const {
-        return stack < TOP_UP_THRESHOLD;
+        return stack < common::constants::BIG_BLIND * 5;
     }
 
-    // Top up stack to target (100BB) if below threshold
     void topUp() {
         if (needsTopUp()) {
-            stack = TARGET_STACK;
+            stack = common::constants::STARTING_STACK;
         }
     }
 };

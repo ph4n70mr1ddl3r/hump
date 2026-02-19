@@ -3,7 +3,6 @@ add_library(client_lib STATIC
     client.cpp
     random_strategy.cpp
     delay.cpp
-    stack_management.cpp
 )
 
 target_include_directories(client_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

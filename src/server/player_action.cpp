@@ -157,15 +157,28 @@ bool applyAction(Hand& hand, Player& player, const std::string& action, int amou
     if (hand.players.size() == 2) {
         // Check if current betting round is complete
         if (hand.isBettingRoundComplete() && hand.current_betting_round != BettingRound::SHOWDOWN) {
+            BettingRound previous_round = hand.current_betting_round;
             if (hand.current_betting_round == BettingRound::PREFLOP) {
                 hand.current_betting_round = BettingRound::FLOP;
+                for (int i = 0; i < 3; ++i) {
+                    if (!hand.deck.empty()) {
+                        hand.community_cards.push_back(hand.deck.deal());
+                    }
+                }
             } else if (hand.current_betting_round == BettingRound::FLOP) {
                 hand.current_betting_round = BettingRound::TURN;
+                if (!hand.deck.empty()) {
+                    hand.community_cards.push_back(hand.deck.deal());
+                }
             } else if (hand.current_betting_round == BettingRound::TURN) {
                 hand.current_betting_round = BettingRound::RIVER;
+                if (!hand.deck.empty()) {
+                    hand.community_cards.push_back(hand.deck.deal());
+                }
             } else if (hand.current_betting_round == BettingRound::RIVER) {
                 hand.current_betting_round = BettingRound::SHOWDOWN;
             }
+            hand.last_advanced_round = previous_round;
             for (size_t i = 0; i < hand.player_bets.size(); ++i) {
                 hand.player_bets[i] = 0;
             }
@@ -180,6 +193,7 @@ bool applyAction(Hand& hand, Player& player, const std::string& action, int amou
                 }
             }
         } else {
+            hand.last_advanced_round = BettingRound::SHOWDOWN;
             hand.current_player_to_act = (hand.current_player_to_act == hand.players[0]) ? hand.players[1] : hand.players[0];
         }
     }
