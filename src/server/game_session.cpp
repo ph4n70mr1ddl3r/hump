@@ -181,10 +181,18 @@ void GameSession::broadcastHandStarted()
             {"payload", payload}
         };
 
-        // Send to specific player only
-        auto it = player_sessions_.find(player->id);
-        if (it != player_sessions_.end() && it->second) {
-            sendJson(it->second, message);
+        std::shared_ptr<WebSocketSession> session;
+        {
+            std::lock_guard<std::mutex> lock(sessions_mutex_);
+            auto it = player_sessions_.find(player->id);
+            if (it != player_sessions_.end())
+            {
+                session = it->second;
+            }
+        }
+        if (session)
+        {
+            sendJson(session, message);
         }
     }
 }

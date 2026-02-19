@@ -3,6 +3,7 @@
 #include "../card.hpp"
 #include "../deck.hpp"
 #include "table.hpp"
+#include "../../common/constants.hpp"
 #include <vector>
 #include <string>
 #include <cstdint>
@@ -47,7 +48,7 @@ struct Hand {
     [[nodiscard]] bool isValid() const {
         return players.size() == 2 &&
                community_cards.size() <= 5 &&
-               min_raise >= 4; // at least big blind
+               min_raise >= common::constants::BIG_BLIND;
     }
 
     [[nodiscard]] bool isBettingRoundComplete() const {

@@ -40,7 +40,7 @@ bool validateAction(const Hand& hand, const Player& player, const std::string& a
         // Find the highest bet among all players (excluding current player)
         int max_bet = 0;
         for (size_t i = 0; i < hand.player_bets.size() && i < hand.players.size(); ++i) {
-            if (hand.players[i] == &player) {
+            if (hand.players[i] && hand.players[i] == &player) {
                 continue; // skip current player
             }
             if (hand.player_bets[i] > max_bet) {
@@ -51,7 +51,7 @@ bool validateAction(const Hand& hand, const Player& player, const std::string& a
         // Get current player's current bet
         int player_current_bet = 0;
         for (size_t i = 0; i < hand.players.size(); ++i) {
-            if (hand.players[i] == &player && i < hand.player_bets.size()) {
+            if (hand.players[i] && hand.players[i] == &player && i < hand.player_bets.size()) {
                 player_current_bet = hand.player_bets[i];
                 break;
             }
@@ -70,7 +70,7 @@ bool validateAction(const Hand& hand, const Player& player, const std::string& a
         // Find current player's current bet
         int player_current_bet = 0;
         for (size_t i = 0; i < hand.players.size(); ++i) {
-            if (hand.players[i] == &player && i < hand.player_bets.size()) {
+            if (hand.players[i] && hand.players[i] == &player && i < hand.player_bets.size()) {
                 player_current_bet = hand.player_bets[i];
                 break;
             }
@@ -97,7 +97,7 @@ bool applyAction(Hand& hand, Player& player, const std::string& action, int amou
 
     if (action == "fold") {
         for (size_t i = 0; i < hand.players.size(); ++i) {
-            if (hand.players[i] == &player) {
+            if (hand.players[i] && hand.players[i] == &player) {
                 if (hand.folded.size() <= i) hand.folded.resize(i + 1, false);
                 hand.folded[i] = true;
                 break;
@@ -111,7 +111,7 @@ bool applyAction(Hand& hand, Player& player, const std::string& action, int amou
         hand.pot += amount;
         int current_max_bet = 0;
         for (size_t i = 0; i < hand.player_bets.size() && i < hand.players.size(); ++i) {
-            if (hand.player_bets[i] > current_max_bet) {
+            if (hand.players[i] && hand.player_bets[i] > current_max_bet) {
                 current_max_bet = hand.player_bets[i];
             }
         }
@@ -132,7 +132,7 @@ bool applyAction(Hand& hand, Player& player, const std::string& action, int amou
         // Find player index
         size_t player_index = hand.players.size();
         for (size_t i = 0; i < hand.players.size(); ++i) {
-            if (hand.players[i] == &player) {
+            if (hand.players[i] && hand.players[i] == &player) {
                 player_index = i;
                 break;
             }
@@ -215,7 +215,7 @@ bool canAct(const Hand& hand, const Player& player) {
         return false;
     }
     for (size_t i = 0; i < hand.players.size(); ++i) {
-        if (hand.players[i] == &player) {
+        if (hand.players[i] && hand.players[i] == &player) {
             if (i < hand.folded.size() && hand.folded[i]) {
                 return false;
             }

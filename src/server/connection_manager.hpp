@@ -12,6 +12,7 @@ public:
     using TimerCallback = std::function<void(const std::string& player_id)>;
 
     ConnectionManager(boost::asio::io_context& ioc);
+    ~ConnectionManager();
 
     // Start grace timer for disconnected player
     void startGraceTimer(const std::string& player_id, int grace_time_ms, TimerCallback on_expiry);
